@@ -106,7 +106,7 @@ part("U2", "Package_SON:WSON-8-1EP_6x5mm_P1.27mm_EP3.4x4.3mm", "W25Q128JVPIQ", "
      desc="16 MB QSPI NOR, used in DIO mode like the X4")
 part("Y1", "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm", "40MHz", "C5380316", 53.0, 11.75, 0, {
     "1": ("X1", "XTAL_P"), "2": ("GND", "GND"), "3": ("X2", "XTAL_N"), "4": ("GND", "GND")})
-part("R1", R0402, "0R", "C17168", 49.9, 12.6, 90, two("XTAL_P", "XTAL_P_CHIP"),
+part("R1", R0402, "0R", "C17168", 49.9, 10.8, 90, two("XTAL_P", "XTAL_P_CHIP"),
      desc="XTAL_P series, Espressif tuning position")
 part("C1", C0402, "12pF", "C1547", 52.0, 14.7, 90, two("XTAL_P", "GND"))
 part("C2", C0402, "12pF", "C1547", 56.2, 10.9, 0, two("XTAL_N", "GND"))
