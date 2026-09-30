@@ -104,12 +104,12 @@ part("U2", "Package_SON:WSON-8-1EP_6x5mm_P1.27mm_EP3.4x4.3mm", "W25Q128JVPIQ", "
          "4": ("GND", "GND"), "5": ("DI", "FLASH_DI"), "6": ("CLK", "FLASH_CLK"),
          "7": ("/HOLD", "VDD_SPI"), "8": ("VCC", "VDD_SPI"), "9": ("EP", "GND")},
      desc="16 MB QSPI NOR, used in DIO mode like the X4")
-part("Y1", "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm", "40MHz", "C5380316", 52.2, 12.4, 90, {
+part("Y1", "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm", "40MHz", "C5380316", 53.0, 11.75, 0, {
     "1": ("X1", "XTAL_P"), "2": ("GND", "GND"), "3": ("X2", "XTAL_N"), "4": ("GND", "GND")})
-part("R1", R0402, "0R", "C17168", 50.4, 9, 0, two("XTAL_P", "XTAL_P_CHIP"),
+part("R1", R0402, "0R", "C17168", 50.0, 12.6, 180, two("XTAL_P", "XTAL_P_CHIP"),
      desc="XTAL_P series, Espressif tuning position")
-part("C1", C0402, "12pF", "C1547", 55, 10.8, 90, two("XTAL_P", "GND"))
-part("C2", C0402, "12pF", "C1547", 55, 14, 90, two("XTAL_N", "GND"))
+part("C1", C0402, "12pF", "C1547", 52.0, 14.7, 90, two("XTAL_P", "GND"))
+part("C2", C0402, "12pF", "C1547", 56.2, 10.9, 0, two("XTAL_N", "GND"))
 # RF: fitted C-L-C-L matching network then chip antenna
 part("C3", C0402, "1.5pF", "C1552", 48.4, 7.6, 90, two("RF_LNA", "GND"),
      desc="RF match shunt 1")

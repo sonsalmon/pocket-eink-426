@@ -131,10 +131,7 @@ def route_xtal_n(board):
     u1 = find_pad(board, "U1", "29").GetPosition()
     y1 = find_pad(board, "Y1", "3").GetPosition()
     c2 = find_pad(board, "C2", "1").GetPosition()
-    add_track(board, net, pcbnew.F_Cu, u1, pt(50.3, 11.75))
-    add_track(board, net, pcbnew.F_Cu, pt(50.3, 11.75), pt(50.3, 14.8))
-    add_track(board, net, pcbnew.F_Cu, pt(50.3, 14.8), pt(54.2, 14.8))
-    add_track(board, net, pcbnew.F_Cu, pt(54.2, 14.8), y1)
+    add_track(board, net, pcbnew.F_Cu, u1, y1)
     add_track(board, net, pcbnew.F_Cu, y1, c2)
 
 
@@ -143,8 +140,7 @@ def route_xtal_p_chip(board):
     net = board.FindNet("XTAL_P_CHIP")
     u1 = find_pad(board, "U1", "30").GetPosition()
     r1 = find_pad(board, "R1", "2").GetPosition()
-    add_track(board, net, pcbnew.F_Cu, u1, pt(49.2, 11.25))
-    add_track(board, net, pcbnew.F_Cu, pt(49.2, 11.25), r1)
+    add_track(board, net, pcbnew.F_Cu, u1, r1)
 
 
 def route_xtal_p(board):
