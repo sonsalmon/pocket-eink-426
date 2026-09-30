@@ -114,6 +114,36 @@ def write_project(out_dir):
         json.dump(project, f, indent=2)
 
 
+def apply_rules(board):
+    """Board rules and net classes set through the API: standalone LoadBoard()
+    does not read the .kicad_pro, and the DSN export only sees these."""
+    ds = board.GetDesignSettings()
+    ds.m_CopperEdgeClearance = mm(0.3)
+    ds.m_MinClearance = mm(0.127)
+    ds.m_TrackMinWidth = mm(0.127)
+    ds.m_ViasMinSize = mm(0.45)
+    ds.m_MinThroughDrill = mm(0.25)
+    ds.m_HoleClearance = mm(0.25)
+    ds.m_HoleToHoleMin = mm(0.25)
+    ns = ds.m_NetSettings
+    classes = {}
+    for name, (width, clearance) in D.NETCLASSES.items():
+        nc = ns.GetDefaultNetclass() if name == "Default" else pcbnew.NETCLASS(name)
+        nc.SetTrackWidth(mm(width))
+        nc.SetClearance(mm(clearance))
+        nc.SetViaDiameter(mm(0.5))
+        nc.SetViaDrill(mm(0.3))
+        if name != "Default":
+            ns.SetNetclass(name, nc)
+        classes[name] = nc
+    for net_name, cls in D.NET_CLASS_OF.items():
+        ns.SetNetclassPatternAssignment(net_name, cls)
+    for net_name, ni in board.GetNetsByName().items():
+        cls = D.NET_CLASS_OF.get(str(net_name), "Default")
+        ni.SetNetClass(classes[cls])
+    board.SynchronizeNetsAndNetClasses(False)
+
+
 def place(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     board = pcbnew.BOARD()
@@ -170,16 +200,19 @@ def place(out_dir):
     # net classes and rules are attached before the DSN export.
     write_project(out_dir)
     board = pcbnew.LoadBoard(pcb_path)
+    apply_rules(board)
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
     if not pcbnew.ExportSpecctraDSN(board, os.path.join(out_dir, f"{NAME}.dsn")):
         raise SystemExit("Specctra DSN export failed")
     pcbnew.SaveBoard(pcb_path, board)
+    write_project(out_dir)
     print(f"placed {len(D.PARTS)} parts, {len(netinfo)} nets -> {pcb_path}")
 
 
 def import_ses(out_dir):
     pcb_path = os.path.join(out_dir, f"{NAME}.kicad_pcb")
     board = pcbnew.LoadBoard(pcb_path)
+    apply_rules(board)
     if not pcbnew.ImportSpecctraSES(board, os.path.join(out_dir, f"{NAME}.ses")):
         raise SystemExit("Specctra SES import failed")
     gnd = board.FindNet("GND")
@@ -187,6 +220,7 @@ def import_ses(out_dir):
         add_zone(board, gnd, layer)
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
     pcbnew.SaveBoard(pcb_path, board)
+    write_project(out_dir)
     tracks = sum(1 for t in board.GetTracks())
     print(f"imported routes: {tracks} track/via items")
 

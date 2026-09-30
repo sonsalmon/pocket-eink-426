@@ -96,7 +96,7 @@ ESP_PINS = {
     "32": ("VDDA", "+3V3"),
     "33": ("GND/EP", "GND"),
 }
-part("U1", "Package_DFN_QFN:QFN-32-1EP_5x5mm_P0.5mm_EP3.7x3.7mm", "ESP32-C3", "C2838500",
+part("U1", "Package_DFN_QFN:QFN-32-1EP_5x5mm_P0.5mm_EP3.7x3.7mm_ThermalVias", "ESP32-C3", "C2838500",
      46, 12, -90, ESP_PINS, desc="Wi-Fi/BLE MCU, RISC-V 160 MHz")
 part("U2", "Package_SON:WSON-8-1EP_6x5mm_P1.27mm_EP3.4x4.3mm", "W25Q128JVPIQ", "C190862",
      48, 20.5, 0, {
@@ -171,7 +171,7 @@ part("C18", C0603, "1uF", "C15849", 25.2, 29.8, 90, two("VBAT", "GND"))
 part("C19", C0603, "10uF", "C19702", 30.8, 29.8, 90, two("+3V3", "GND"))
 
 # ----------------------------------------------------------- microSD -------
-part("J1", "Connector_Card:microSD_HC_Hirose_DM3AT-SF-PEJM5", "microSD", "C114218", 7.6, 12, -90, {
+part("J1", "Connector_Card:microSD_HC_Hirose_DM3AT-SF-PEJM5", "microSD", "C114218", 9.0, 12, -90, {
     "1": ("DAT2", "SD_DAT2"), "2": ("CD/DAT3", "SD_CS"), "3": ("CMD", "SPI_MOSI"),
     "4": ("VDD", "SD_VDD"), "5": ("CLK", "SPI_SCLK"), "6": ("VSS", "GND"),
     "7": ("DAT0", "SD_MISO"), "8": ("DAT1", "SD_DAT1"), "9": ("DET", "GND"),
