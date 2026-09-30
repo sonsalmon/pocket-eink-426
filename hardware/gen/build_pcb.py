@@ -151,13 +151,13 @@ def write_project(out_dir):
         "board": {"design_settings": {
             "defaults": {
                 "board_outline_line_width": 0.1, "copper_line_width": 0.2,
-                "solder_mask_clearance": 0.0, "solder_mask_min_width": 0.05,
+                "solder_mask_clearance": 0.0, "solder_mask_min_width": 0.10,
             },
             "rules": {
                 "min_clearance": 0.127, "min_track_width": 0.09, "min_via_diameter": 0.4,
                 "min_via_annular_width": 0.1, "min_through_hole_diameter": 0.2,
                 "min_hole_to_hole": 0.25, "min_copper_edge_clearance": 0.3,
-                "min_silk_clearance": 0.0, "min_hole_clearance": 0.2,
+                "min_silk_clearance": 0.15, "min_hole_clearance": 0.2,
             },
             "track_widths": [0.15, 0.25, 0.35],
             "via_dimensions": [{"diameter": 0.5, "drill": 0.3}],
@@ -183,7 +183,8 @@ def apply_rules(board, router_margin=False):
     ds.m_HoleClearance = mm(0.2)
     ds.m_HoleToHoleMin = mm(0.25)
     ds.m_SolderMaskExpansion = mm(0)
-    ds.m_SolderMaskMinWidth = mm(0.05)
+    ds.m_SolderMaskMinWidth = mm(0.10)
+    ds.m_SilkClearance = mm(0.15)
     ns = ds.m_NetSettings
     classes = {}
     for name, (width, clearance) in D.NETCLASSES.items():
