@@ -1,0 +1,52 @@
+# Rev B: 폰이 두뇌 (부품 최소화)
+
+2026-09-30 사용자 결정: 부품값을 최대한 줄이고 폰 앱으로 기능을 메운다. 직접 납땜한다.
+Rev A(CrossPoint, SD 카드)는 태그 `rev-a-crosspoint`로 보존한다.
+
+## 역할 나누기
+
+- 폰 앱: EPUB 열기, 글꼴·줄간격, 페이지 나누기, 800×480 흑백 그림으로 그리기, 압축해서 블루투스로 전송.
+- 기기: 받은 페이지를 내장 플래시에 저장하고, 버튼으로 넘기며 화면에 표시. 책을 해석하지 않는다.
+
+## 기판 변경 (hardware/gen/design.py)
+
+| 구분 | 내용 |
+| --- | --- |
+| MCU | ESP32-C3 칩 + 크리스털 + RF 정합 + 칩 안테나 + 외장 플래시 → **ESP32-C3-WROOM-02-N4 모듈** (LCSC C2934560, 18×20×3.2 mm, 가장자리 패드라 인두로 납땜 가능, 4 MB 내장 플래시, 안테나 내장) |
+| 제거 | U2 플래시, Y1·C1·C2·R1, C3·C4·L2·L3·AE1, J1 microSD, Q2·R12~R16·C20, U3 DW01A·Q1 FS8205A·R6·C13·R7, U6 USBLC6 |
+| 배터리 | 보호회로(PCM) 붙은 303450 셀을 산다. 기판 보호회로는 뺀다. |
+| 유지 | MCP73831 충전, RT9080 3.3 V, 배터리 전압 분압, e-paper 승압 회로, FH12 24핀 커넥터, USB-C(충전 + 펌웨어 업로드, CC 5.1 kΩ), 버튼 사다리 3키 + 전원 키, 충전 LED |
+| 크기 | 수동 부품은 0603 이상(인두 납땜용). 승압 커패시터는 0805 유지. |
+| 배치 | 모듈은 화면 아래 버튼 띠 영역(높이 3.2 mm 허용) 또는 화면 밖. 모듈 안테나 끝은 기판 가장자리 밖으로 내거나 모듈 데이터시트의 금지 영역을 지킨다. 화면 아래 영역 부품 높이 1.6 mm 이하는 그대로. |
+| 핀 | Rev A와 같은 GPIO: EPD SCLK 8 / MOSI 10 / CS 21 / DC 4 / RST 5 / BUSY 6, 사다리 1, 전원 키 3, 배터리 0, USB 감지 20. GPIO2·8은 10 kΩ 풀업(부팅 조건), GPIO9 BOOT 테스트 패드. GPIO7·2는 여유. |
+
+### 모듈 핀 (LCSC C2934560 EasyEDA 풋프린트 `ESP32-C3-WROOM-02-N4.kicad_mod`, `hardware/lib/pocket.pretty`)
+
+1 3V3, 2 EN, 3 IO4, 4 IO5, 5 IO6, 6 IO7, 7 IO8, 8 IO9, 9 GND, 10 IO10, 11 RXD(IO20), 12 TXD(IO21), 13 IO18(USB D-), 14 IO19(USB D+), 15 IO3, 16 IO2, 17 IO1, 18 IO0, 19 EP(GND).
+
+## 펌웨어 (firmware/ble-reader, 새 PlatformIO 프로젝트)
+
+- Arduino + GxEPD2(GDEQ0426T82) + NimBLE-Arduino + LittleFS. CrossPoint는 쓰지 않는다.
+- 저장: LittleFS에 `/book/<id>/p<N>.bin` (압축된 1비트 800×480 페이지), `/book/<id>/meta.json`, 마지막 읽은 페이지.
+- 버튼: ◀ 이전, ▶ 다음(부분 갱신), ● 짧게 전체 새로고침, ● 길게 책 목록, 전원 키 짧게 잠자기·깨우기.
+- 블루투스: 아래 프로토콜의 GATT 서비스. 연결 안 됐을 때는 광고만 하고 딥슬립 중에는 꺼짐(전원 키로 깨운 뒤 광고).
+- 전원: 페이지를 넘긴 뒤 곧 light sleep, 일정 시간 입력이 없으면 deep sleep(전원 키 깨우기).
+
+## 블루투스 프로토콜 v1 (앱이 따라야 할 계약)
+
+- 서비스 UUID `7b1e0001-8f4c-4d6a-9c3e-2f5a6b7c8d90`
+  - `...0002` Control (write, notify): JSON 명령·응답
+  - `...0003` Data (write without response): 페이지 조각
+- 명령 (Control write, UTF-8 JSON):
+  - `{"op":"info"}` → `{"fw":"1.0","w":800,"h":480,"bpp":1,"free":<bytes>,"books":[...]}`
+  - `{"op":"begin_book","id":"<짧은 id>","title":"...","pages":N}`
+  - `{"op":"begin_page","book":"<id>","n":<0부터>,"len":<압축 바이트>,"crc32":<정수>}` → Data로 `len` 바이트 전송 → 기기가 `{"ok":true,"n":..}` 또는 `{"ok":false,"err":"crc"}` 알림
+  - `{"op":"end_book","id":"<id>"}`, `{"op":"delete_book","id":"<id>"}`, `{"op":"open","id":"<id>","page":n}`
+- 페이지 형식: 800×480, 1비트(1=검정), 행 우선, 가로 바이트 100개, 화면 회전은 앱이 처리. 압축은 raw deflate(zlib 헤더 없음).
+- MTU는 협상된 값에서 3바이트를 뺀 크기로 Data 조각을 보낸다.
+
+## 완료 조건
+
+- 기판: hardware CI 녹색(ERC 0, DRC 0, JLC 공정 한계 유지, 같은 커밋 2회 연속 녹색).
+- 펌웨어: CI 빌드 녹색, 호스트에서 돌리는 단위 테스트(프로토콜 파싱·CRC·압축 해제·페이지 저장 경로) 통과.
+- 도구: `tools/send_book.py` (Python, bleak): 텍스트 파일을 페이지 그림으로 그려 프로토콜로 보낸다. 앱이 나오기 전 시험용이자 앱의 기준 구현이다.
