@@ -22,6 +22,11 @@ constexpr unsigned long kDeepSleepMs = 5UL * 60UL * 1000UL;
 ReaderApp::ReaderApp()
     : store_([this](const std::string& id, const std::size_t page) {
         open_page(id, page);
+      }, [this]() {
+        books_ = store_.list_books();
+        if (screen_ == Screen::Reading) {
+          emit_need(store_.need_request(current_book_, current_page_));
+        }
       }),
       protocol_(store_, wifi_),
       ble_(protocol_) {
@@ -98,6 +103,7 @@ void ReaderApp::loop() {
 }
 
 void ReaderApp::open_page(const std::string& id, const std::size_t page) {
+  books_ = store_.list_books();
   if (!store_.has_page(id, page)) {
     current_book_ = id;
     current_page_ = page;
@@ -145,7 +151,8 @@ void ReaderApp::handle_short_press(const Key key) {
     if (screen_ == Screen::Reading) {
       display_.draw_page(current_book_, current_page_, false);
     } else if (!books_.empty()) {
-      store_.open_book(books_[selected_book_].id, 0);
+      const BookInfo selected = books_[selected_book_];
+      store_.open_book(selected.id, selected.last);
     }
   }
 }
@@ -157,6 +164,7 @@ void ReaderApp::handle_long_press(const Key key) {
 }
 
 void ReaderApp::change_page(const int delta) {
+  books_ = store_.list_books();
   const auto selected =
       std::find_if(books_.begin(), books_.end(), [this](const BookInfo& book) {
         return book.id == current_book_;

@@ -9,6 +9,7 @@ namespace {
 constexpr std::size_t kBackPages = 20;
 constexpr std::size_t kAheadPages = 150;
 constexpr std::size_t kNeedThreshold = 30;
+constexpr std::size_t kOtherBackAheadPages = 2;
 
 std::size_t distance(const std::size_t left, const std::size_t right) {
   return left > right ? left - right : right - left;
@@ -17,7 +18,7 @@ std::size_t distance(const std::size_t left, const std::size_t right) {
 bool inside_current_window(const std::size_t page,
                            const std::size_t current) {
   const std::size_t first = current > kBackPages ? current - kBackPages : 0;
-  return page >= first && page <= current + kAheadPages;
+  return page >= first && (page <= current || page - current <= kAheadPages);
 }
 
 }  // namespace
@@ -55,7 +56,9 @@ EvictionPlan plan_eviction(const std::vector<CachedPage>& cached,
   std::vector<CachedPage> current;
   for (const CachedPage& page : cached) {
     if (page.book != current_book) {
-      other.push_back(page);
+      if (distance(page.page, page.last) > kOtherBackAheadPages) {
+        other.push_back(page);
+      }
     } else if (!inside_current_window(page.page, current_page)) {
       current.push_back(page);
     }
@@ -65,7 +68,11 @@ EvictionPlan plan_eviction(const std::vector<CachedPage>& cached,
     return distance(left.page, left.last) > distance(right.page, right.last);
   };
   std::sort(other.begin(), other.end(), farthest_first);
-  std::sort(current.begin(), current.end(), farthest_first);
+  std::sort(current.begin(), current.end(),
+            [current_page](const CachedPage& left, const CachedPage& right) {
+              return distance(left.page, current_page) >
+                     distance(right.page, current_page);
+            });
 
   EvictionPlan plan;
   std::size_t freed = 0;
@@ -81,11 +88,8 @@ EvictionPlan plan_eviction(const std::vector<CachedPage>& cached,
     plan.pages.push_back(page);
     plan.current_book_shrunk = true;
     freed += page.bytes;
-    if (freed >= target) {
-      plan.enough = true;
-      return plan;
-    }
   }
+  plan.enough = freed >= target;
   return plan;
 }
 
