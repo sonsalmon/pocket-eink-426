@@ -128,7 +128,7 @@ part("C6", C0402, "100nF", "C1525", 46.6, 7.6, 0, two("+3V3", "GND"), desc="VDD3
 part("C7", C0402, "100nF", "C1525", 41.8, 11.2, 90, two("+3V3", "GND"), desc="VDD3P3_RTC")
 part("C8", C0402, "100nF", "C1525", 43.6, 16.6, 0, two("+3V3", "GND"), desc="VDD3P3_CPU")
 part("C9", C0402, "1uF", "C14445", 45.6, 16.6, 0, two("VDD_SPI", "GND"), desc="VDD_SPI -> flash")
-part("C10", C0402, "100nF", "C1525", 49.9, 11.2, 90, two("+3V3", "GND"), desc="VDDA 31/32")
+part("C10", C0402, "100nF", "C1525", 50.0, 14.5, 90, two("+3V3", "GND"), desc="VDDA 31/32")
 part("C11", C0402, "100nF", "C1525", 51.8, 19, 90, two("VDD_SPI", "GND"), desc="flash VCC")
 part("R3", R0402, "10k", "C25744", 43.4, 7.4, 90, two("+3V3", "EN"))
 part("C12", C0402, "1uF", "C14445", 42.2, 7.4, 90, two("EN", "GND"), desc="EN RC delay")
@@ -211,7 +211,7 @@ part("J2", "Connector_FFC-FPC:Hirose_FH12-24S-0.5SH_1x24-1MP_P0.50mm_Horizontal"
      desc="under the panel, opening toward the panel's FPC edge; verify contact side and pin 1")
 part("L1", f"{LIB_POCKET}:IND-SMD_L4.0-W4.0_FNR4012S", "47uH", "C167794", 21, 17, 0,
      two("+3V3", "EPD_SW"), desc="boost inductor, 1.2 mm tall")
-part("C32", C0603, "4.7uF", "C19666", 17.2, 17, 180, two("+3V3", "GND"),
+part("C32", C0603, "4.7uF", "C19666", 18.0, 20.0, 180, two("+3V3", "GND"),
      desc="boost input bulk, next to L1 pin 1")
 part("Q3", "Package_TO_SOT_SMD:SOT-323_SC-70", "Si1308EDL", "C469327", 25.8, 16, 0, {
     "1": ("G", "GDR"), "2": ("S", "RESE"), "3": ("D", "EPD_SW")})
@@ -279,7 +279,7 @@ part("R26", R0402, "100k", "C25741", 43.4, 30.0, 90, two("USB_DET", "GND"))
 # ------------------------------------------------------------ test pads ----
 part("TP3", "TestPoint:TestPoint_Pad_1.0x1.0mm", "3V3", "", 4.5, 41.2, 0, {"1": ("3V3", "+3V3")})
 part("TP4", "TestPoint:TestPoint_Pad_1.0x1.0mm", "GND", "", 7, 41.2, 0, {"1": ("GND", "GND")})
-part("TP5", "TestPoint:TestPoint_Pad_1.0x1.0mm", "BOOT", "", 4.5, 43.6, 0, {"1": ("GPIO9", "BOOT")})
+part("TP5", "TestPoint:TestPoint_Pad_1.0x1.0mm", "BOOT", "", 38.0, 27.8, 0, {"1": ("GPIO9", "BOOT")})
 part("TP6", "TestPoint:TestPoint_Pad_1.0x1.0mm", "EN", "", 7, 43.6, 0, {"1": ("EN", "EN")})
 
 

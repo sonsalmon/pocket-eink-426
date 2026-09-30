@@ -126,18 +126,28 @@ def route_epd_busy(board):
 
 
 def route_xtal_n(board):
-    """Keep the crystal return short and reserve its crowded QFN escape."""
+    """Keep the crystal return short and include its load capacitor branch."""
     net = board.FindNet("XTAL_N")
     u1 = find_pad(board, "U1", "29").GetPosition()
     y1 = find_pad(board, "Y1", "3").GetPosition()
+    c2 = find_pad(board, "C2", "1").GetPosition()
     add_track(board, net, pcbnew.F_Cu, u1, y1)
+    add_track(board, net, pcbnew.F_Cu, y1, c2)
+
+
+def route_xtal_p_chip(board):
+    """Reserve the short MCU-to-series-resistor crystal connection."""
+    net = board.FindNet("XTAL_P_CHIP")
+    u1 = find_pad(board, "U1", "30").GetPosition()
+    r1 = find_pad(board, "R1", "2").GetPosition()
+    add_track(board, net, pcbnew.F_Cu, u1, r1)
 
 
 def enforce_min_track_width(board):
     """Freerouting can neck short QFN escape segments below the DSN rule."""
     minimum = mm(0.09)
     for item in board.GetTracks():
-        if item.GetWidth() < minimum:
+        if not isinstance(item, pcbnew.PCB_VIA) and item.GetWidth() < minimum:
             item.SetWidth(minimum)
 
 
@@ -254,6 +264,7 @@ def place(out_dir):
     add_antenna_keepout(board)
     route_epd_busy(board)
     route_xtal_n(board)
+    route_xtal_p_chip(board)
     # Only the In1 GND plane goes to the router (GND pads get vias to it); the
     # other pours are added after routing so they cannot fragment into islands.
     add_zone(board, netinfo["GND"], pcbnew.In1_Cu)
