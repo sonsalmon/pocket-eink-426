@@ -99,7 +99,7 @@ ESP_PINS = {
 part("U1", "Package_DFN_QFN:QFN-32-1EP_5x5mm_P0.5mm_EP3.7x3.7mm_ThermalVias", "ESP32-C3", "C2838500",
      46, 12, -90, ESP_PINS, desc="Wi-Fi/BLE MCU, RISC-V 160 MHz")
 part("U2", "Package_SON:WSON-8-1EP_6x5mm_P1.27mm_EP3.4x4.3mm", "W25Q128JVPIQ", "C190862",
-     48, 20.5, 0, {
+     52.0, 17.0, 90, {
          "1": ("/CS", "FLASH_CS"), "2": ("DO", "FLASH_DO"), "3": ("/WP", "VDD_SPI"),
          "4": ("GND", "GND"), "5": ("DI", "FLASH_DI"), "6": ("CLK", "FLASH_CLK"),
          "7": ("/HOLD", "VDD_SPI"), "8": ("VCC", "VDD_SPI"), "9": ("EP", "GND")},
@@ -108,7 +108,7 @@ part("Y1", "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm", "40MHz", "C5380316", 53.0,
     "1": ("X1", "XTAL_P"), "2": ("GND", "GND"), "3": ("X2", "XTAL_N"), "4": ("GND", "GND")})
 part("R1", R0402, "0R", "C17168", 49.9, 10.8, 90, two("XTAL_P", "XTAL_P_CHIP"),
      desc="XTAL_P series, Espressif tuning position")
-part("C1", C0402, "12pF", "C1547", 52.0, 14.7, 90, two("XTAL_P", "GND"))
+part("C1", C0402, "12pF", "C1547", 56.2, 14.5, 90, two("XTAL_P", "GND"))
 part("C2", C0402, "12pF", "C1547", 56.2, 10.9, 0, two("XTAL_N", "GND"))
 # RF: fitted C-L-C-L matching network then chip antenna
 part("C3", C0402, "1.5pF", "C1552", 48.4, 7.6, 90, two("RF_LNA", "GND"),
@@ -128,8 +128,8 @@ part("C6", C0402, "100nF", "C1525", 46.6, 7.6, 0, two("+3V3", "GND"), desc="VDD3
 part("C7", C0402, "100nF", "C1525", 39.0, 16.5, 90, two("+3V3", "GND"), desc="VDD3P3_RTC")
 part("C8", C0402, "100nF", "C1525", 43.6, 16.6, 0, two("+3V3", "GND"), desc="VDD3P3_CPU")
 part("C9", C0402, "1uF", "C14445", 45.6, 16.6, 0, two("VDD_SPI", "GND"), desc="VDD_SPI -> flash")
-part("C10", C0402, "100nF", "C1525", 49.8, 16.0, 90, two("+3V3", "GND"), desc="VDDA 31/32")
-part("C11", C0402, "100nF", "C1525", 51.8, 19, 90, two("VDD_SPI", "GND"), desc="flash VCC")
+part("C10", C0402, "100nF", "C1525", 47.5, 18.5, 90, two("+3V3", "GND"), desc="VDDA 31/32")
+part("C11", C0402, "100nF", "C1525", 56.0, 18.5, 90, two("VDD_SPI", "GND"), desc="flash VCC")
 part("R3", R0402, "10k", "C25744", 43.4, 7.4, 90, two("+3V3", "EN"))
 part("C12", C0402, "1uF", "C14445", 42.2, 7.4, 90, two("EN", "GND"), desc="EN RC delay")
 part("R4", R0402, "10k", "C25744", 40.2, 13.4, 90, two("+3V3", "BOOT"), desc="GPIO9 strap high")
@@ -185,7 +185,7 @@ part("J1", "Connector_Card:microSD_HC_Hirose_DM3AT-SF-PEJM5", "microSD", "C11421
 part("Q2", "Package_TO_SOT_SMD:SOT-23", "AO3401A", "C15127", 15.6, 23.0, 0, {
     "1": ("G", "SD_PWR_N"), "2": ("S", "+3V3"), "3": ("D", "SD_VDD")},
     desc="SD power switch, GPIO2 low = on")
-part("R12", R0402, "10k", "C25744", 18.4, 23.0, 90, two("+3V3", "SD_PWR_N"), desc="off at boot, keeps GPIO2 strap high")
+part("R12", R0402, "10k", "C25744", 41.2, 10.0, 0, two("+3V3", "SD_PWR_N"), desc="off at boot, keeps GPIO2 strap high")
 part("C20", C0603, "1uF", "C15849", 12.6, 23.0, 90, two("SD_VDD", "GND"))
 part("R13", R0402, "10k", "C25744", 16.0, 3.0, 90, two("SD_VDD", "SD_CS"))
 part("R14", R0402, "10k", "C25744", 14.6, 3.0, 90, two("SD_VDD", "SD_MISO"))
