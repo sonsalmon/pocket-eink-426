@@ -182,8 +182,8 @@ part("F1", "Resistor_SMD:R_0603_1608Metric", "0R", "C21189", 50.4, 32, 0, two("V
      desc="VBUS link (fit a PTC here if wanted)")
 part("R23", R0603, "5.1k", "C23186", 50.0, 43.2, 0, two("CC1", "GND"))
 part("R24", R0603, "5.1k", "C23186", 46.5, 43.2, 0, two("CC2", "GND"))
-part("R25", R0603, "100k", "C25803", 42.0, 30.0, 90, two("VBUS", "USB_DET"))
-part("R26", R0603, "100k", "C25803", 44.0, 30.0, 90, two("USB_DET", "GND"))
+part("R25", R0603, "100k", "C25803", 34.0, 30.0, 90, two("VBUS", "USB_DET"))
+part("R26", R0603, "100k", "C25803", 36.0, 30.0, 90, two("USB_DET", "GND"))
 
 # ------------------------------------------------------------ test pads ----
 part("TP3", "TestPoint:TestPoint_Pad_1.0x1.0mm", "3V3", "", 3.0, 3.0, 0, {"1": ("3V3", "+3V3")})
