@@ -131,9 +131,10 @@ def route_xtal_n(board):
     u1 = find_pad(board, "U1", "29").GetPosition()
     y1 = find_pad(board, "Y1", "3").GetPosition()
     c2 = find_pad(board, "C2", "1").GetPosition()
-    add_track(board, net, pcbnew.F_Cu, u1, pt(49.0, 15.0))
-    add_track(board, net, pcbnew.F_Cu, pt(49.0, 15.0), pt(54.2, 15.0))
-    add_track(board, net, pcbnew.F_Cu, pt(54.2, 15.0), y1)
+    add_track(board, net, pcbnew.F_Cu, u1, pt(50.3, 11.75))
+    add_track(board, net, pcbnew.F_Cu, pt(50.3, 11.75), pt(50.3, 14.8))
+    add_track(board, net, pcbnew.F_Cu, pt(50.3, 14.8), pt(54.2, 14.8))
+    add_track(board, net, pcbnew.F_Cu, pt(54.2, 14.8), y1)
     add_track(board, net, pcbnew.F_Cu, y1, c2)
 
 
@@ -144,6 +145,16 @@ def route_xtal_p_chip(board):
     r1 = find_pad(board, "R1", "2").GetPosition()
     add_track(board, net, pcbnew.F_Cu, u1, pt(49.2, 11.25))
     add_track(board, net, pcbnew.F_Cu, pt(49.2, 11.25), r1)
+
+
+def route_xtal_p(board):
+    """Reserve the crystal output and its load capacitor branch."""
+    net = board.FindNet("XTAL_P")
+    r1 = find_pad(board, "R1", "1").GetPosition()
+    y1 = find_pad(board, "Y1", "1").GetPosition()
+    c1 = find_pad(board, "C1", "1").GetPosition()
+    add_track(board, net, pcbnew.F_Cu, r1, y1)
+    add_track(board, net, pcbnew.F_Cu, y1, c1)
 
 
 def enforce_min_track_width(board):
@@ -202,7 +213,7 @@ def apply_rules(board, router_margin=False):
     classes = {}
     for name, (width, clearance) in D.NETCLASSES.items():
         if router_margin and name == "HV":
-            clearance += 0.025
+            clearance += 0.05
         nc = ns.GetDefaultNetclass() if name == "Default" else pcbnew.NETCLASS(name)
         nc.SetTrackWidth(mm(width))
         nc.SetClearance(mm(clearance))
@@ -268,6 +279,7 @@ def place(out_dir):
     route_epd_busy(board)
     route_xtal_n(board)
     route_xtal_p_chip(board)
+    route_xtal_p(board)
     # Only the In1 GND plane goes to the router (GND pads get vias to it); the
     # other pours are added after routing so they cannot fragment into islands.
     add_zone(board, netinfo["GND"], pcbnew.In1_Cu)

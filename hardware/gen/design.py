@@ -128,7 +128,7 @@ part("C6", C0402, "100nF", "C1525", 46.6, 7.6, 0, two("+3V3", "GND"), desc="VDD3
 part("C7", C0402, "100nF", "C1525", 41.8, 11.2, 90, two("+3V3", "GND"), desc="VDD3P3_RTC")
 part("C8", C0402, "100nF", "C1525", 43.6, 16.6, 0, two("+3V3", "GND"), desc="VDD3P3_CPU")
 part("C9", C0402, "1uF", "C14445", 45.6, 16.6, 0, two("VDD_SPI", "GND"), desc="VDD_SPI -> flash")
-part("C10", C0402, "100nF", "C1525", 49.0, 13.8, 90, two("+3V3", "GND"), desc="VDDA 31/32")
+part("C10", C0402, "100nF", "C1525", 49.8, 16.0, 90, two("+3V3", "GND"), desc="VDDA 31/32")
 part("C11", C0402, "100nF", "C1525", 51.8, 19, 90, two("VDD_SPI", "GND"), desc="flash VCC")
 part("R3", R0402, "10k", "C25744", 43.4, 7.4, 90, two("+3V3", "EN"))
 part("C12", C0402, "1uF", "C14445", 42.2, 7.4, 90, two("EN", "GND"), desc="EN RC delay")
