@@ -186,7 +186,8 @@ void ReaderApp::emit_need(const NeedRange& range) {
 void ReaderApp::sleep_deep() {
   display_.hibernate();
   NimBLEDevice::deinit(true);
-  esp_sleep_enable_ext1_wakeup(1ULL << kPowerPin, ESP_EXT1_WAKEUP_ALL_LOW);
+  esp_deep_sleep_enable_gpio_wakeup(1ULL << kPowerPin,
+                                    ESP_GPIO_WAKEUP_GPIO_LOW);
   esp_deep_sleep_start();
 }
 
