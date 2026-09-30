@@ -117,6 +117,28 @@ def add_ground_stitching(board, net):
         board.Add(via)
 
 
+def add_module_ep_vias(board, net):
+    """Expose U1's bottom EP on B.Cu for hand-soldering and ground it to In1."""
+    module = board.FindFootprintByReference("U1")
+    positions = {
+        (pad.GetPosition().x, pad.GetPosition().y)
+        for pad in module.Pads()
+        if pad.GetNumber() == "19"
+    }
+    if len(positions) != 9:
+        raise SystemExit(f"U1 EP expected 9 thermal-via sites, found {len(positions)}")
+    for x, y in sorted(positions):
+        via = pcbnew.PCB_VIA(board)
+        via.SetPosition(pcbnew.VECTOR2I(x, y))
+        via.SetWidth(mm(0.7))
+        via.SetDrill(mm(0.4))
+        via.SetNet(net)
+        via.SetFrontTentingMode(pcbnew.TENTING_MODE_TENTED)
+        via.SetBackTentingMode(pcbnew.TENTING_MODE_NOT_TENTED)
+        via.SetLocked(True)
+        board.Add(via)
+
+
 def enforce_min_track_width(board):
     """Freerouting can neck short QFN escape segments below the DSN rule."""
     minimum = mm(0.09)
@@ -242,6 +264,7 @@ def place(out_dir):
 
     add_outline(board)
     add_antenna_keepout(board)
+    add_module_ep_vias(board, netinfo["GND"])
     add_ground_stitching(board, netinfo["GND"])
     # In1.Cu is the uninterrupted ground reference; the router uses the other
     # three layers for signals and drops GND pads to this plane.
