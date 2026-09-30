@@ -29,7 +29,7 @@ def main(path):
 
     for ref, part in expected.items():
         fp = actual[ref]
-        footprint_name = fp.GetFPID().GetLibItemName()
+        footprint_name = str(fp.GetFPID().GetLibItemName())
         expected_name = part["fp"].split(":", 1)[1]
         if footprint_name != expected_name:
             fail(f"{ref} footprint {footprint_name!r} != {expected_name!r}")
