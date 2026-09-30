@@ -144,7 +144,7 @@ index 48351e1..0b04cfe 100644
    unsigned long buttonPressFinish;
    unsigned long powerButtonPressStart;
 diff --git a/libs/hardware/InputManager/src/InputManager.cpp b/libs/hardware/InputManager/src/InputManager.cpp
-index f813886..e0cf538 100644
+index f813886..a760577 100644
 --- a/libs/hardware/InputManager/src/InputManager.cpp
 +++ b/libs/hardware/InputManager/src/InputManager.cpp
 @@ -99,7 +99,8 @@ void InputManager::begin() {
@@ -157,7 +157,7 @@ index f813886..e0cf538 100644
      if (BoardConfig::ACTIVE.input.adcLadderPin >= 0) {
        pinMode(BoardConfig::ACTIVE.input.adcLadderPin, INPUT);
      }
-@@ -161,7 +162,8 @@ void InputManager::readButtonAdc(ButtonAdcSample& group1, ButtonAdcSample& group
+@@ -161,10 +162,14 @@ void InputManager::readButtonAdc(ButtonAdcSample& group1, ButtonAdcSample& group
  uint8_t InputManager::getState() {
    uint8_t state = 0;
  
@@ -166,8 +166,15 @@ index f813886..e0cf538 100644
 +      BoardConfig::ACTIVE.inputStyle == BoardConfig::InputStyle::LadderConfirmBackHold) {
      if (BoardConfig::ACTIVE.input.adcLadderPin >= 0) {
        const int mv = analogReadMilliVolts(BoardConfig::ACTIVE.input.adcLadderPin);
-       if (mv >= 2400 && mv <= 2800)      state |= (1 << BTN_BACK);    // ~2592 mV
-@@ -415,6 +417,50 @@ void InputManager::updateConfirmBackHold(const unsigned long currentTime) {
+-      if (mv >= 2400 && mv <= 2800)      state |= (1 << BTN_BACK);    // ~2592 mV
++      // LadderConfirmBackHold boards have no BACK key: their idle ladder sits at
++      // 3.3 V, above the calibrated ADC range, where readings can land in 2400-2800.
++      const bool ladderHasBack = BoardConfig::ACTIVE.inputStyle == BoardConfig::InputStyle::OnePageAdcLadder;
++      if (ladderHasBack && mv >= 2400 && mv <= 2800) state |= (1 << BTN_BACK);  // ~2592 mV
+       else if (mv >= 1780 && mv <= 2140) state |= (1 << BTN_LEFT);    // ~1956 mV
+       else if (mv >= 1140 && mv <= 1500) state |= (1 << BTN_RIGHT);   // ~1316 mV
+       else if (mv >= 0 && mv <= 250)     state |= (1 << BTN_CONFIRM); // ~0 mV (ENTER)
+@@ -415,6 +420,50 @@ void InputManager::updateConfirmBackHold(const unsigned long currentTime) {
    }
  }
  
@@ -218,7 +225,7 @@ index f813886..e0cf538 100644
  void InputManager::updateConfirmPowerHold(const unsigned long currentTime) {
    const int8_t sharedPin =
        BoardConfig::ACTIVE.input.confirm >= 0 ? BoardConfig::ACTIVE.input.confirm : BoardConfig::ACTIVE.input.power;
-@@ -532,6 +578,10 @@ void InputManager::update() {
+@@ -532,6 +581,10 @@ void InputManager::update() {
      updateConfirmBackHold(currentTime);
      return;
    }
