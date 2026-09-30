@@ -46,8 +46,7 @@ jobs:
             -mp 200 \
             -mt 1 \
             -is sequential \
-            --router.via_costs=500 \
-            --router.layers.routable=true,true \
+            --router.layers.routable=true,false,true,true \
             --gui.enabled=false | tail -40
           test -s pocket-eink.ses
 

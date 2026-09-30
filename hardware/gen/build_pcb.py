@@ -199,8 +199,8 @@ def apply_rules(board, router_margin=False):
 def place(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     board = pcbnew.BOARD()
-    board.SetCopperLayerCount(2)
-    board.GetDesignSettings().SetBoardThickness(mm(1.0))
+    board.SetCopperLayerCount(4)
+    board.GetDesignSettings().SetBoardThickness(mm(0.8))
 
     netinfo = {}
     for name in D.nets():
@@ -243,8 +243,9 @@ def place(out_dir):
     add_outline(board)
     add_antenna_keepout(board)
     add_ground_stitching(board, netinfo["GND"])
-    # The bottom layer is a continuous ground reference. Signals route on F.Cu.
-    add_zone(board, netinfo["GND"], pcbnew.B_Cu)
+    # In1.Cu is the uninterrupted ground reference; the router uses the other
+    # three layers for signals and drops GND pads to this plane.
+    add_zone(board, netinfo["GND"], pcbnew.In1_Cu)
 
     pcb_path = os.path.join(out_dir, f"{NAME}.kicad_pcb")
     pcbnew.SaveBoard(pcb_path, board)
@@ -269,7 +270,8 @@ def import_ses(out_dir):
         raise SystemExit("Specctra SES import failed")
     enforce_min_track_width(board)
     gnd = board.FindNet("GND")
-    add_zone(board, gnd, pcbnew.F_Cu)
+    for layer in (pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu):
+        add_zone(board, gnd, layer)
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
     pcbnew.SaveBoard(pcb_path, board)
     write_project(out_dir)
