@@ -64,7 +64,7 @@ def add_zone(board, net, layer, priority=0):
     z.SetAssignedPriority(priority)
     z.SetLocalClearance(mm(0.2))
     z.SetMinThickness(mm(0.2))
-    z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
+    z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL)
     z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)
     rect_outline(z, 0.3, 0.3, D.BOARD_W - 0.3, D.BOARD_H - 0.3)
     board.Add(z)

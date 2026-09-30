@@ -44,7 +44,7 @@ jobs:
             -de pocket-eink.dsn \
             -do pocket-eink.ses \
             -mp 200 \
-            -mt 0 \
+            -mt 1 \
             -is sequential \
             --router.layers.routable=true,false \
             --gui.enabled=false | tail -40
