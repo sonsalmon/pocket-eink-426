@@ -120,10 +120,12 @@ def apply_rules(board):
     ds = board.GetDesignSettings()
     ds.m_CopperEdgeClearance = mm(0.3)
     ds.m_MinClearance = mm(0.127)
-    ds.m_TrackMinWidth = mm(0.127)
-    ds.m_ViasMinSize = mm(0.45)
-    ds.m_MinThroughDrill = mm(0.25)
-    ds.m_HoleClearance = mm(0.25)
+    # JLCPCB 4-layer capability: 0.09 mm track/space, 0.15 mm min drill,
+    # 0.2 mm hole-to-copper. The router necks down to ~0.095 mm at QFN pads.
+    ds.m_TrackMinWidth = mm(0.09)
+    ds.m_ViasMinSize = mm(0.4)
+    ds.m_MinThroughDrill = mm(0.2)
+    ds.m_HoleClearance = mm(0.2)
     ds.m_HoleToHoleMin = mm(0.25)
     ns = ds.m_NetSettings
     classes = {}
