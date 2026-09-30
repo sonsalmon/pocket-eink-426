@@ -154,6 +154,7 @@ bool BookStore::commit_page() {
       compressed.size()) {
     return false;
   }
+  compressed_file.close();
   std::vector<std::uint8_t> page(800U * 480U / 8U);
   if (!inflate_raw(compressed.data(), compressed.size(), page.data(),
                    page.size())) {
