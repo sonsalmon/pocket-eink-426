@@ -56,7 +56,21 @@
 | U6 | USBLC6-2SC6 | USBLC6-2SC6 | SOT-23-6 | [C7519](https://jlcpcb.com/partdetail/C7519) | 확장 | 1 | $0.1766 |
 | R25 R26 | 0402WGF1003TCE | 100k | R_0402_1005Metric | [C25741](https://jlcpcb.com/partdetail/C25741) | 기본 | 2 | $0.0024 |
 
-DNP(실장하지 않음): C3, C4 (안테나 정합용 빈자리). 배터리 선은 TP1(+)·TP2(-)에 직접 납땜합니다.
+### 독립 회로 검토 뒤 바뀐 부품 (2026-09-30)
+
+| 참조 | 변경 | LCSC | 이유 |
+| --- | --- | --- | --- |
+| Q1 FS8205A | 핀 배치 수정(1=S1, 2·5=D, 3=S2, 4=G2, 6=G1) | [C2830320](https://jlcpcb.com/partdetail/C2830320) | 기존 배치에서는 보호 회로가 동작하지 않았음 |
+| Y1 | 40 MHz ±10 ppm, 12 pF로 교체 | [C5380316](https://jlcpcb.com/partdetail/C5380316) | Espressif 권장 ±10 ppm |
+| C3·C4 | 1.5 pF 실장 | [C1552](https://jlcpcb.com/partdetail/C1552) | 칩 쪽 RF 정합(C-L-C) |
+| L2 (구 R2) | 2.7 nH | [C77108](https://jlcpcb.com/partdetail/C77108) | 칩 쪽 RF 정합 |
+| L3 (추가) | 6.8 nH, 안테나 직렬 | [C77110](https://jlcpcb.com/partdetail/C77110) | 칩 안테나가 2.45 GHz에 맞도록 |
+| C20 | 10 µF → 1 µF | [C15849](https://jlcpcb.com/partdetail/C15849) | SD 전원을 켤 때 3.3 V가 순간적으로 떨어지는 것 완화 |
+| C32 (추가) | 4.7 µF, 승압 인덕터 입력 | [C19666](https://jlcpcb.com/partdetail/C19666) | 승압 회로 입력 안정 |
+
+RF 정합 값은 시작점입니다. 첫 기판에서 Wi-Fi 거리를 보고 조정합니다. 위 표 2절의 가격 목록은 변경 전 목록이며, 합계 변동은 1장당 $0.2 이내입니다.
+
+배터리 선은 TP1(+)·TP2(-)에 직접 납땜합니다.
 
 ## 3. 예상 비용 (5장 주문, 추정)
 
