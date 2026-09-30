@@ -108,14 +108,10 @@ def find_pad(board, ref, number):
 
 
 def route_epd_busy(board):
-    """Replace the router's dead-end stub with a deterministic bottom route."""
+    """Complete the router's dead-end stub with a deterministic bottom route."""
     net = board.FindNet("EPD_BUSY")
     j2 = find_pad(board, "J2", "9").GetPosition()
     u1 = find_pad(board, "U1", "12").GetPosition()
-    for item in list(board.GetTracks()):
-        if item.GetNetCode() == net.GetNetCode():
-            board.Remove(item)
-
     j2_via = pt(29.25, 1.5)
     u1_via = pt(42.8, 11.75)
 
