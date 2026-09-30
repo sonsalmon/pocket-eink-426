@@ -8,20 +8,22 @@ so the schematic and the board can never drift apart.
 
 Board frame (portrait, seen from the front / panel side, y grows downward):
   y 0.0 .. 26.3  : under the e-paper panel (parts must stay <= 1.6 mm tall)
-  y 26.3 .. 45.0 : strip below the panel (battery/charger/LDO, 3 buttons, USB-C)
+  y 26.3 .. 45.5 : strip below the panel (battery/charger/LDO, 3 buttons, USB-C)
 Rev B uses an ESP32-C3-WROOM-02-N4 module and keeps the Rev A GPIO assignment.
 """
 
 BOARD_W = 62.0
-BOARD_H = 45.0
+BOARD_H = 45.5
 PANEL_EDGE_Y = 26.3  # bottom edge of the GDEY0426T82 active glass over the PCB
 # The panel's FPC (about 24 mm past the glass, per the Waveshare outline of
 # 129.33 mm vs 105.33 mm glass) folds 180 degrees behind the panel and runs back
 # up to this connector opening. Adjust after measuring a real panel.
 FPC_OPENING_Y = 10.0
 
-# Module antenna keep-out (no copper on any layer): left board edge.
-ANT_KEEPOUT = (0.0, 26.2, 6.2, 44.3)  # x0, y0, x1, y1
+# Remove the base PCB beneath the antenna, keeping the 62 mm device envelope.
+# U1's transformed antenna is x=0..6, y=26.4..44.4. The notch puts its
+# feed end at the base-board edge, as recommended by Espressif for modules.
+ANT_KEEPOUT = (0.0, 26.2, 6.3, BOARD_H)  # x0, y0, x1, y1; all copper layers
 
 # Net classes: name -> (track width, clearance) in mm
 NETCLASSES = {
@@ -66,7 +68,7 @@ ESP_PINS = {
     "17": ("IO1", "BTN_ADC"), "18": ("IO0", "BAT_SENSE"), "19": ("EP", "GND"),
 }
 part("U1", f"{LIB_POCKET}:ESP32-C3-WROOM-02-N4", "ESP32-C3-WROOM-02-N4", "C2934560",
-     13.1, 34.8, 90, ESP_PINS, desc="Wi-Fi/BLE module with 4 MB flash and PCB antenna")
+     13.1, 35.4, 90, ESP_PINS, desc="Wi-Fi/BLE module with 4 MB flash and PCB antenna")
 # Supply and boot support at the module's board-facing side.
 part("C5", C0603, "10uF", "C19702", 27.0, 24.0, 90, two("+3V3", "GND"))
 part("C6", C0603, "100nF", "C14663", 29.0, 24.0, 90, two("+3V3", "GND"))
@@ -90,7 +92,7 @@ part("C15", C0603, "100nF", "C14663", 11.0, 22.0, 90, two("BAT_SENSE", "GND"))
 part("U4", "Package_TO_SOT_SMD:SOT-23-5", "MCP73831-2", "C424093", 7.5, 17.0, 0, {
     "1": ("STAT", "CHG_STAT"), "2": ("VSS", "GND"), "3": ("VBAT", "VBAT"),
     "4": ("VDD", "VBUS"), "5": ("PROG", "CHG_PROG")}, desc="LiPo charger, 256 mA")
-part("R10", R0603, "3.9k", "C22980", 7.5, 19.5, 0, two("CHG_PROG", "GND"), desc="Ichg = 1000/3.9k")
+part("R10", R0603, "3.9k", "C23018", 7.5, 19.5, 0, two("CHG_PROG", "GND"), desc="Ichg = 1000/3.9k")
 part("C16", C0603, "4.7uF", "C19666", 4.5, 17.0, 90, two("VBUS", "GND"))
 part("C17", C0603, "4.7uF", "C19666", 10.5, 17.0, 90, two("VBAT", "GND"))
 part("D1", "LED_SMD:LED_0603_1608Metric", "RED", "C2286", 13.0, 18.5, 0,

@@ -38,7 +38,11 @@ def load_fp(spec):
 
 
 def add_outline(board):
-    corners = [(0, 0), (D.BOARD_W, 0), (D.BOARD_W, D.BOARD_H), (0, D.BOARD_H)]
+    _, notch_y, notch_x, _ = D.ANT_KEEPOUT
+    corners = [
+        (0, 0), (D.BOARD_W, 0), (D.BOARD_W, D.BOARD_H),
+        (notch_x, D.BOARD_H), (notch_x, notch_y), (0, notch_y),
+    ]
     for (x0, y0), (x1, y1) in zip(corners, corners[1:] + corners[:1]):
         seg = pcbnew.PCB_SHAPE(board)
         seg.SetShape(pcbnew.SHAPE_T_SEGMENT)
@@ -244,6 +248,10 @@ def place(out_dir):
         fp.Reference().SetTextSize(pcbnew.VECTOR2I(mm(0.5), mm(0.5)))
         fp.Reference().SetTextThickness(mm(0.08))
         fp.Reference().SetVisible(p["ref"].startswith(("J", "SW", "TP", "U")))
+        if p["ref"] == "SW1":
+            fp.Reference().SetPosition(pt(p["x"], p["y"] + 3.0))
+        if p["ref"] == "U1":
+            fp.Reference().SetVisible(False)
         fp.Value().SetVisible(False)
         seen = set()
         for pad in fp.Pads():

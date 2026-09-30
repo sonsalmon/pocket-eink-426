@@ -41,7 +41,11 @@ Rev B 기판에는 배터리 보호회로가 없습니다. 반드시 보호회�
 | R11 | 0603WAF1001T5E | 1k | R_0603_1608Metric | [C21190](https://www.lcsc.com/product-detail/C21190.html) | 1 | $0.0026 |
 | R21 | 0603WAF6801T5E | 6.8k | R_0603_1608Metric | [C23212](https://www.lcsc.com/product-detail/C23212.html) | 1 | $0.0023 |
 | F1 | 0603WAF0000T5E | 0R | R_0603_1608Metric | [C21189](https://www.lcsc.com/product-detail/C21189.html) | 1 | $0.0023 |
-| R10 | 0603WAF3601T5E | 3.9k | R_0603_1608Metric | [C22980](https://www.lcsc.com/product-detail/C22980.html) | 1 | $0.0019 |
+| R10 | 0603WAF3901T5E | 3.9k | R_0603_1608Metric | [C23018](https://www.lcsc.com/product-detail/C23018.html) | 1 | 재조회 필요 |
+
+R10은 LCSC C23018의 `0603WAF3901T5E`이며, 2026-09-30 LCSC 검색과 제품 API에서 3.9 kΩ ±1%, 100 mW, 0603을 확인했습니다. 충전 전류는 약 256 mA입니다.
+
+U1 모듈 본체는 기판 좌표 y=26.4~44.4 mm로 화면 아래에 있습니다. 기판 외곽은 62×45.5 mm이며, 왼쪽 아래 x=0~6.3 mm, y=26.2~45.5 mm를 잘라 안테나가 기판 밖에 놓이도록 했습니다. 모듈 아래 접지 비아 9개는 유지합니다.
 
 부품값 합계는 1장당 $6.66입니다. 5장 분량을 LCSC 최소 구매 수량에 맞춰 사면 $43.05입니다. ESP32 모듈 5개($16.4)가 이 금액의 대부분을 차지합니다.
 

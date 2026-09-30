@@ -1,4 +1,4 @@
-"""Summarize a kicad-cli ERC/DRC JSON report; exit 1 on any error-level item.
+"""Fail on ERC/DRC errors and manufacturing silk-clearance warnings.
 
   python3 report.py erc|drc REPORT.json
 """
@@ -20,9 +20,14 @@ def items(report, kind):
 def main(kind, path):
     with open(path) as f:
         report = json.load(f)
-    found = [v for v in items(report, kind) if v.get("severity", "error") == "error"]
+    silk_checks = {"silk_over_copper", "silk_overlap", "silk_clearance"}
+    found = [
+        v for v in items(report, kind)
+        if v.get("severity", "error") == "error"
+        or (kind == "drc" and v.get("type") in silk_checks)
+    ]
     by_type = Counter(v.get("type", "?") for v in found)
-    print(f"{kind.upper()}: {len(found)} error(s)")
+    print(f"{kind.upper()}: {len(found)} blocking finding(s)")
     for t, n in by_type.most_common():
         print(f"  {n:4d}  {t}")
     for v in found[:40]:

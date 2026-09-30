@@ -73,7 +73,7 @@ jobs:
 
       - name: DRC
         working-directory: hardware/out
-        run: kicad-cli pcb drc --format json --severity-error -o drc.json pocket-eink.kicad_pcb || true
+        run: kicad-cli pcb drc --format json --severity-all --all-track-errors -o drc.json pocket-eink.kicad_pcb || true
 
       - name: Fabrication outputs
         if: always()
