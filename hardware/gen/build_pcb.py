@@ -83,13 +83,13 @@ def add_antenna_keepout(board):
     board.Add(z)
 
 
-def add_epd_busy_escape(board):
-    """Escape U1 pad 12 to a via; Freerouting completes the remaining net."""
+def add_u1_escape(board, pad_number, net_name, offset):
+    """Escape one crowded U1 pad to a via; Freerouting completes the net."""
     footprint = board.FindFootprintByReference("U1")
-    pad = next(p for p in footprint.Pads() if p.GetNumber() == "12")
-    net = board.FindNet("EPD_BUSY")
+    pad = next(p for p in footprint.Pads() if p.GetNumber() == pad_number)
+    net = board.FindNet(net_name)
     start = pad.GetPosition()
-    via_pos = pcbnew.VECTOR2I(start.x - mm(0.7), start.y)
+    via_pos = pcbnew.VECTOR2I(start.x - mm(offset), start.y)
 
     track = pcbnew.PCB_TRACK(board)
     track.SetStart(start)
@@ -233,7 +233,8 @@ def place(out_dir):
 
     add_outline(board)
     add_antenna_keepout(board)
-    add_epd_busy_escape(board)
+    add_u1_escape(board, "12", "EPD_BUSY", 0.7)
+    add_u1_escape(board, "13", "SD_MISO", 1.3)
     # Only the In1 GND plane goes to the router (GND pads get vias to it); the
     # other pours are added after routing so they cannot fragment into islands.
     add_zone(board, netinfo["GND"], pcbnew.In1_Cu)
