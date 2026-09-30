@@ -235,6 +235,7 @@ def place(out_dir):
     add_antenna_keepout(board)
     add_u1_escape(board, "12", "EPD_BUSY", 0.7)
     add_u1_escape(board, "13", "SD_MISO", 1.1, 0.25)
+    add_u1_escape(board, "14", "SPI_SCLK", 1.5, 0.5)
     # Only the In1 GND plane goes to the router (GND pads get vias to it); the
     # other pours are added after routing so they cannot fragment into islands.
     add_zone(board, netinfo["GND"], pcbnew.In1_Cu)
