@@ -99,10 +99,10 @@ def write_project(out_dir):
         "board": {"design_settings": {
             "defaults": {"board_outline_line_width": 0.1, "copper_line_width": 0.2},
             "rules": {
-                "min_clearance": 0.127, "min_track_width": 0.127, "min_via_diameter": 0.45,
-                "min_via_annular_width": 0.1, "min_through_hole_diameter": 0.25,
+                "min_clearance": 0.127, "min_track_width": 0.09, "min_via_diameter": 0.4,
+                "min_via_annular_width": 0.1, "min_through_hole_diameter": 0.2,
                 "min_hole_to_hole": 0.25, "min_copper_edge_clearance": 0.3,
-                "min_silk_clearance": 0.0, "min_hole_clearance": 0.25,
+                "min_silk_clearance": 0.0, "min_hole_clearance": 0.2,
             },
             "track_widths": [0.15, 0.25, 0.35],
             "via_dimensions": [{"diameter": 0.5, "drill": 0.3}],
