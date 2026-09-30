@@ -22,21 +22,23 @@ index e6b5d0f..32191e0 100644
  ; Different MCU family than the C3 envs (one binary per family). The SDK
  ; auto-enables CAP_TOUCH (GT911) and the BQ27220 gauge for this device. The
 diff --git a/src/activities/reader/EpubReaderActivity.cpp b/src/activities/reader/EpubReaderActivity.cpp
-index eb62ecd..8e71a2f 100644
+index eb62ecd..a89f80b 100644
 --- a/src/activities/reader/EpubReaderActivity.cpp
 +++ b/src/activities/reader/EpubReaderActivity.cpp
-@@ -607,6 +607,24 @@ void EpubReaderActivity::loop() {
+@@ -607,6 +607,26 @@ void EpubReaderActivity::loop() {
      }
    }
  
 +#if FREEINK_DEVICE_POCKET426
-+  // No Back key: a short center press is a full refresh, and the long press
-+  // (synthesized as Back by the SDK) opens the reader menu instead of leaving.
++  // No Back key: a short center press is a full refresh; holding it past the
++  // SDK's 650 ms threshold synthesizes Back, which opens the reader menu at once
++  // (wasLongPressed also swallows the release, so the menu is not cancelled and
++  // handleBackNavigation's 1 s long-Back exit never fires).
 +  if (confirmReleased) {
 +    handleForcedRefresh();
 +    return;
 +  }
-+  if (footnoteDepth == 0 && mappedInput.wasReleased(MappedInputManager::Button::Back)) {
++  if (footnoteDepth == 0 && mappedInput.wasLongPressed(MappedInputManager::Button::Back, 0)) {
 +    if (usesToolbarMenu() && section) {
 +      pendingManualTurn = 0;
 +      openOverlay(Overlay::Toolbar);
@@ -51,16 +53,20 @@ index eb62ecd..8e71a2f 100644
      // Toolbar style: the page is on screen and in the framebuffer, so paint the
      // toolbar over it (one refresh) instead of pushing a full-screen menu.
 diff --git a/src/activities/reader/XtcReaderActivity.cpp b/src/activities/reader/XtcReaderActivity.cpp
-index 44bba17..976abc1 100644
+index 44bba17..7dc52a4 100644
 --- a/src/activities/reader/XtcReaderActivity.cpp
 +++ b/src/activities/reader/XtcReaderActivity.cpp
-@@ -49,6 +49,13 @@ bool XtcReaderActivity::handleFormatInput() {
+@@ -49,6 +49,17 @@ bool XtcReaderActivity::handleFormatInput() {
      return false;
    }
  
 +#if FREEINK_DEVICE_POCKET426
 +  if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
 +    handleForcedRefresh();
++    return true;
++  }
++  if (mappedInput.wasLongPressed(MappedInputManager::Button::Back, 0)) {
++    openChapterSelection();
 +    return true;
 +  }
 +#endif
