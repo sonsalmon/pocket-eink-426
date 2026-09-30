@@ -75,7 +75,7 @@ def add_antenna_keepout(board):
     z = pcbnew.ZONE(board)
     z.SetIsRuleArea(True)
     z.SetLayerSet(pcbnew.LSET.AllCuMask())
-    z.SetDoNotAllowZoneFills(True)
+    (getattr(z, "SetDoNotAllowZoneFills", None) or z.SetDoNotAllowCopperPour)(True)
     z.SetDoNotAllowVias(True)
     z.SetDoNotAllowTracks(False)  # the feed trace has to reach the antenna pad
     z.SetDoNotAllowPads(False)
