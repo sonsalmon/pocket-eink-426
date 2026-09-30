@@ -188,7 +188,7 @@ def apply_rules(board, router_margin=False):
     classes = {}
     for name, (width, clearance) in D.NETCLASSES.items():
         if router_margin and name == "HV":
-            clearance += 0.05
+            clearance += 0.10
         nc = ns.GetDefaultNetclass() if name == "Default" else pcbnew.NETCLASS(name)
         nc.SetTrackWidth(mm(width))
         nc.SetClearance(mm(clearance))
