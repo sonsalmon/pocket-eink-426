@@ -83,6 +83,58 @@ def add_antenna_keepout(board):
     board.Add(z)
 
 
+def add_track(board, net, layer, start, end, width=0.127):
+    track = pcbnew.PCB_TRACK(board)
+    track.SetStart(start)
+    track.SetEnd(end)
+    track.SetWidth(mm(width))
+    track.SetLayer(layer)
+    track.SetNet(net)
+    board.Add(track)
+
+
+def add_via(board, net, position):
+    via = pcbnew.PCB_VIA(board)
+    via.SetPosition(position)
+    via.SetWidth(mm(0.5))
+    via.SetDrill(mm(0.3))
+    via.SetNet(net)
+    board.Add(via)
+
+
+def find_pad(board, ref, number):
+    footprint = next(fp for fp in board.GetFootprints() if fp.GetReference() == ref)
+    return next(pad for pad in footprint.Pads() if pad.GetNumber() == number)
+
+
+def route_epd_busy(board):
+    """Replace the router's dead-end stub with a deterministic bottom route."""
+    net = board.FindNet("EPD_BUSY")
+    for item in list(board.GetTracks()):
+        if item.GetNetCode() == net.GetNetCode():
+            board.Remove(item)
+
+    j2 = find_pad(board, "J2", "9").GetPosition()
+    u1 = find_pad(board, "U1", "12").GetPosition()
+    j2_via = pt(29.25, 1.5)
+    u1_via = pt(42.8, 11.75)
+
+    add_track(board, net, pcbnew.F_Cu, j2, j2_via)
+    add_via(board, net, j2_via)
+    add_track(board, net, pcbnew.B_Cu, j2_via, pt(42.8, 1.5))
+    add_track(board, net, pcbnew.B_Cu, pt(42.8, 1.5), u1_via)
+    add_via(board, net, u1_via)
+    add_track(board, net, pcbnew.F_Cu, u1_via, u1)
+
+
+def enforce_min_track_width(board):
+    """Freerouting can neck short QFN escape segments below the DSN rule."""
+    minimum = mm(0.09)
+    for item in board.GetTracks():
+        if item.GetWidth() < minimum:
+            item.SetWidth(minimum)
+
+
 def write_project(out_dir):
     classes = []
     for name, (width, clearance) in D.NETCLASSES.items():
@@ -217,6 +269,8 @@ def import_ses(out_dir):
     apply_rules(board)
     if not pcbnew.ImportSpecctraSES(board, os.path.join(out_dir, f"{NAME}.ses")):
         raise SystemExit("Specctra SES import failed")
+    route_epd_busy(board)
+    enforce_min_track_width(board)
     gnd = board.FindNet("GND")
     for layer in (pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu):
         add_zone(board, gnd, layer)
