@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <string>
 
+#include "core/http_page.h"
+
 namespace pocket {
 namespace {
 
@@ -86,12 +88,14 @@ void WifiTransport::handle_page() {
     return;
   }
   const String body = server_.arg("plain");
-  const std::string command =
-      std::string(R"({"op":"begin_page","book":")") +
-      "\"" + server_.arg("book").c_str() + "\",\"n\":" +
-      server_.arg("n").c_str() + ",\"len\":" +
-      std::to_string(body.length()) + ",\"crc32\":" +
-      server_.arg("crc32").c_str() + "}";
+  std::string command;
+  if (!build_http_page_command(server_.arg("book").c_str(),
+                               server_.arg("n").c_str(),
+                               server_.arg("crc32").c_str(), body.length(),
+                               command)) {
+    server_.send(400, "application/json", R"({"ok":false,"err":"args"})");
+    return;
+  }
   const ServiceResult begin = service_->handle_control(command);
   if (begin.notify) {
     server_.send(400, "application/json", begin.json.c_str());
