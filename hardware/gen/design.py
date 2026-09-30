@@ -125,7 +125,7 @@ part("AE1", f"{LIB_POCKET}:FILTER-SMD_1206-2P-L3.2-W1.6-L", "RFANT3216120A5T", "
 # Supply decoupling near the MCU
 part("C5", C0603, "10uF", "C19702", 41.2, 16.4, 90, two("+3V3", "GND"))
 part("C6", C0402, "100nF", "C1525", 46.6, 7.6, 0, two("+3V3", "GND"), desc="VDD3P3 pins 2/3")
-part("C7", C0402, "100nF", "C1525", 40.2, 10.4, 90, two("+3V3", "GND"), desc="VDD3P3_RTC")
+part("C7", C0402, "100nF", "C1525", 39.0, 16.5, 90, two("+3V3", "GND"), desc="VDD3P3_RTC")
 part("C8", C0402, "100nF", "C1525", 43.6, 16.6, 0, two("+3V3", "GND"), desc="VDD3P3_CPU")
 part("C9", C0402, "1uF", "C14445", 45.6, 16.6, 0, two("VDD_SPI", "GND"), desc="VDD_SPI -> flash")
 part("C10", C0402, "100nF", "C1525", 49.8, 16.0, 90, two("+3V3", "GND"), desc="VDDA 31/32")
@@ -211,7 +211,7 @@ part("J2", "Connector_FFC-FPC:Hirose_FH12-24S-0.5SH_1x24-1MP_P0.50mm_Horizontal"
      desc="under the panel, opening toward the panel's FPC edge; verify contact side and pin 1")
 part("L1", f"{LIB_POCKET}:IND-SMD_L4.0-W4.0_FNR4012S", "47uH", "C167794", 21, 17, 0,
      two("+3V3", "EPD_SW"), desc="boost inductor, 1.2 mm tall")
-part("C32", C0603, "4.7uF", "C19666", 20.5, 20.5, 90, two("+3V3", "GND"),
+part("C32", C0603, "4.7uF", "C19666", 20.5, 20.7, 90, two("+3V3", "GND"),
      desc="boost input bulk, next to L1 pin 1")
 part("Q3", "Package_TO_SOT_SMD:SOT-323_SC-70", "Si1308EDL", "C469327", 25.2, 16, 0, {
     "1": ("G", "GDR"), "2": ("S", "RESE"), "3": ("D", "EPD_SW")})
