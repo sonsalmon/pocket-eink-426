@@ -125,6 +125,14 @@ def route_epd_busy(board):
     add_track(board, net, pcbnew.F_Cu, u1_via, u1)
 
 
+def route_xtal_n(board):
+    """Keep the crystal return short and reserve its crowded QFN escape."""
+    net = board.FindNet("XTAL_N")
+    u1 = find_pad(board, "U1", "29").GetPosition()
+    y1 = find_pad(board, "Y1", "3").GetPosition()
+    add_track(board, net, pcbnew.F_Cu, u1, y1)
+
+
 def enforce_min_track_width(board):
     """Freerouting can neck short QFN escape segments below the DSN rule."""
     minimum = mm(0.09)
@@ -164,7 +172,7 @@ def write_project(out_dir):
         json.dump(project, f, indent=2)
 
 
-def apply_rules(board):
+def apply_rules(board, router_margin=False):
     """Board rules and net classes set through the API: standalone LoadBoard()
     does not read the .kicad_pro, and the DSN export only sees these."""
     ds = board.GetDesignSettings()
@@ -180,6 +188,8 @@ def apply_rules(board):
     ns = ds.m_NetSettings
     classes = {}
     for name, (width, clearance) in D.NETCLASSES.items():
+        if router_margin and name == "HV":
+            clearance += 0.025
         nc = ns.GetDefaultNetclass() if name == "Default" else pcbnew.NETCLASS(name)
         nc.SetTrackWidth(mm(width))
         nc.SetClearance(mm(clearance))
@@ -243,6 +253,7 @@ def place(out_dir):
     add_outline(board)
     add_antenna_keepout(board)
     route_epd_busy(board)
+    route_xtal_n(board)
     # Only the In1 GND plane goes to the router (GND pads get vias to it); the
     # other pours are added after routing so they cannot fragment into islands.
     add_zone(board, netinfo["GND"], pcbnew.In1_Cu)
@@ -253,7 +264,7 @@ def place(out_dir):
     # net classes and rules are attached before the DSN export.
     write_project(out_dir)
     board = pcbnew.LoadBoard(pcb_path)
-    apply_rules(board)
+    apply_rules(board, router_margin=True)
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
     if not pcbnew.ExportSpecctraDSN(board, os.path.join(out_dir, f"{NAME}.dsn")):
         raise SystemExit("Specctra DSN export failed")

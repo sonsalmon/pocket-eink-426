@@ -36,7 +36,7 @@ NET_CLASS_OF = {
     "BAT_RAW-": "Power", "SD_VDD": "Power",
     "PREVGH": "HV", "PREVGL": "HV", "VSH1": "HV", "VSH2": "HV", "VSL": "HV",
     "VCOM": "HV", "EPD_SW": "HV", "EPD_NEG": "HV", "GDR": "HV",
-    "RF_ANT": "RF", "RF_LNA": "RF",
+    "RF_ANT": "RF", "RF_LNA": "RF", "RF_MID": "RF",
 }
 
 LIB_POCKET = "pocket"  # hardware/lib/pocket.pretty (footprints from EasyEDA/LCSC)
@@ -104,16 +104,21 @@ part("U2", "Package_SON:WSON-8-1EP_6x5mm_P1.27mm_EP3.4x4.3mm", "W25Q128JVPIQ", "
          "4": ("GND", "GND"), "5": ("DI", "FLASH_DI"), "6": ("CLK", "FLASH_CLK"),
          "7": ("/HOLD", "VDD_SPI"), "8": ("VCC", "VDD_SPI"), "9": ("EP", "GND")},
      desc="16 MB QSPI NOR, used in DIO mode like the X4")
-part("Y1", "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm", "40MHz", "C254336", 52.2, 12.4, 90, {
+part("Y1", "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm", "40MHz", "C5380316", 52.2, 12.4, 90, {
     "1": ("X1", "XTAL_P"), "2": ("GND", "GND"), "3": ("X2", "XTAL_N"), "4": ("GND", "GND")})
 part("R1", R0402, "0R", "C17168", 50.4, 9, 0, two("XTAL_P", "XTAL_P_CHIP"),
      desc="XTAL_P series, Espressif tuning position")
 part("C1", C0402, "12pF", "C1547", 55, 10.8, 90, two("XTAL_P", "GND"))
 part("C2", C0402, "12pF", "C1547", 55, 14, 90, two("XTAL_N", "GND"))
-# RF: pi network (shunt C DNP / series 0R / shunt C DNP) then chip antenna
-part("C3", C0402, "DNP", "", 48.4, 7.6, 90, two("RF_LNA", "GND"), dnp=True, desc="RF match shunt 1")
-part("R2", R0402, "0R", "C17168", 49.2, 6.2, 0, two("RF_LNA", "RF_ANT"), desc="RF match series")
-part("C4", C0402, "DNP", "", 51, 6, 90, two("RF_ANT", "GND"), dnp=True, desc="RF match shunt 2")
+# RF: fitted C-L-C-L matching network then chip antenna
+part("C3", C0402, "1.5pF", "C1552", 48.4, 7.6, 90, two("RF_LNA", "GND"),
+     desc="RF match shunt 1")
+part("L2", "Inductor_SMD:L_0402_1005Metric", "2.7nH", "C77108", 49.2, 6.2, 0,
+     two("RF_LNA", "RF_MID"), desc="RF match series 1, LQG15HS2N7S02D")
+part("C4", C0402, "1.5pF", "C1552", 51, 6, 90, two("RF_MID", "GND"),
+     desc="RF match shunt 2")
+part("L3", "Inductor_SMD:L_0402_1005Metric", "6.8nH", "C77110", 52.6, 5.2, 0,
+     two("RF_MID", "RF_ANT"), desc="RF match series 2, LQG15HS6N8J02D")
 part("AE1", f"{LIB_POCKET}:FILTER-SMD_1206-2P-L3.2-W1.6-L", "RFANT3216120A5T", "C127629",
      57.5, 3.0, 0, {"1": ("FEED", "RF_ANT"), "2": ("NC", "ANT_NC")},
      desc="2.4 GHz chip antenna, keep-out zone around it")
@@ -140,8 +145,8 @@ part("U3", "Package_TO_SOT_SMD:SOT-23-6", "DW01A", "C351410", 6.5, 29.5, 0, {
     "1": ("OD", "PROT_OD"), "2": ("CS", "PROT_CS"), "3": ("OC", "PROT_OC"),
     "4": ("TD", "PROT_TD"), "5": ("VCC", "PROT_VCC"), "6": ("GND", "BAT_RAW-")})
 part("Q1", "Package_TO_SOT_SMD:SOT-23-6", "FS8205A", "C2830320", 11, 29.5, 0, {
-    "1": ("D1", "Q1_D"), "2": ("S1", "BAT_RAW-"), "3": ("G1", "PROT_OD"),
-    "4": ("G2", "PROT_OC"), "5": ("S2", "GND"), "6": ("D2", "Q1_D")},
+    "1": ("S1", "BAT_RAW-"), "2": ("D1", "Q1_D"), "3": ("S2", "GND"),
+    "4": ("G2", "PROT_OC"), "5": ("D2", "Q1_D"), "6": ("G1", "PROT_OD")},
     desc="dual N-MOSFET, drains common")
 part("R6", R0402, "470R", "C25117", 6.5, 32.4, 0, two("VBAT", "PROT_VCC"))
 part("C13", C0402, "100nF", "C1525", 8.8, 32.4, 0, two("PROT_VCC", "BAT_RAW-"))
@@ -181,7 +186,7 @@ part("Q2", "Package_TO_SOT_SMD:SOT-23", "AO3401A", "C15127", 15.6, 23.0, 0, {
     "1": ("G", "SD_PWR_N"), "2": ("S", "+3V3"), "3": ("D", "SD_VDD")},
     desc="SD power switch, GPIO2 low = on")
 part("R12", R0402, "10k", "C25744", 18.4, 23.0, 90, two("+3V3", "SD_PWR_N"), desc="off at boot, keeps GPIO2 strap high")
-part("C20", C0603, "10uF", "C19702", 12.6, 23.0, 90, two("SD_VDD", "GND"))
+part("C20", C0603, "1uF", "C15849", 12.6, 23.0, 90, two("SD_VDD", "GND"))
 part("R13", R0402, "10k", "C25744", 16.0, 3.0, 90, two("SD_VDD", "SD_CS"))
 part("R14", R0402, "10k", "C25744", 14.6, 3.0, 90, two("SD_VDD", "SD_MISO"))
 part("R15", R0402, "10k", "C25744", 13.2, 3.0, 90, two("SD_VDD", "SD_DAT1"))
@@ -206,6 +211,8 @@ part("J2", "Connector_FFC-FPC:Hirose_FH12-24S-0.5SH_1x24-1MP_P0.50mm_Horizontal"
      desc="under the panel, opening toward the panel's FPC edge; verify contact side and pin 1")
 part("L1", f"{LIB_POCKET}:IND-SMD_L4.0-W4.0_FNR4012S", "47uH", "C167794", 21, 17, 0,
      two("+3V3", "EPD_SW"), desc="boost inductor, 1.2 mm tall")
+part("C32", C0603, "4.7uF", "C19666", 17.2, 17, 180, two("+3V3", "GND"),
+     desc="boost input bulk, next to L1 pin 1")
 part("Q3", "Package_TO_SOT_SMD:SOT-323_SC-70", "Si1308EDL", "C469327", 25.8, 16, 0, {
     "1": ("G", "GDR"), "2": ("S", "RESE"), "3": ("D", "EPD_SW")})
 part("R17", R0603, "2.2R", "C22939", 25.8, 18.6, 0, two("RESE", "GND"), desc="current sense")
