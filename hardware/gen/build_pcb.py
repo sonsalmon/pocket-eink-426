@@ -145,7 +145,7 @@ def nudge_vcom_via(board):
     ]
     via = max(vias, key=lambda item: item.GetPosition().y)
     old = via.GetPosition()
-    new = pcbnew.VECTOR2I(old.x - mm(0.2), old.y)
+    new = pcbnew.VECTOR2I(old.x - mm(0.2), old.y + mm(0.2))
     for item in items:
         if isinstance(item, pcbnew.PCB_VIA) or item.GetNetCode() != net.GetNetCode():
             continue
