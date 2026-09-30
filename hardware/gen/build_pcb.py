@@ -135,6 +135,27 @@ def enforce_min_track_width(board):
             item.SetWidth(minimum)
 
 
+def nudge_vcom_via(board):
+    """Move the lower VCOM via left with its connected track endpoints."""
+    net = board.FindNet("VCOM")
+    items = board.GetTracks()
+    vias = [
+        item for item in items
+        if isinstance(item, pcbnew.PCB_VIA) and item.GetNetCode() == net.GetNetCode()
+    ]
+    via = max(vias, key=lambda item: item.GetPosition().y)
+    old = via.GetPosition()
+    new = pcbnew.VECTOR2I(old.x - mm(0.2), old.y)
+    for item in items:
+        if isinstance(item, pcbnew.PCB_VIA) or item.GetNetCode() != net.GetNetCode():
+            continue
+        if item.GetStart() == old:
+            item.SetStart(new)
+        if item.GetEnd() == old:
+            item.SetEnd(new)
+    via.SetPosition(new)
+
+
 def write_project(out_dir):
     classes = []
     for name, (width, clearance) in D.NETCLASSES.items():
@@ -188,7 +209,7 @@ def apply_rules(board, router_margin=False):
     classes = {}
     for name, (width, clearance) in D.NETCLASSES.items():
         if router_margin and name == "HV":
-            clearance += 0.10
+            clearance += 0.05
         nc = ns.GetDefaultNetclass() if name == "Default" else pcbnew.NETCLASS(name)
         nc.SetTrackWidth(mm(width))
         nc.SetClearance(mm(clearance))
@@ -288,6 +309,7 @@ def import_ses(out_dir):
     if not pcbnew.ImportSpecctraSES(board, os.path.join(out_dir, f"{NAME}.ses")):
         raise SystemExit("Specctra SES import failed")
     enforce_min_track_width(board)
+    nudge_vcom_via(board)
     gnd = board.FindNet("GND")
     for layer in (pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu):
         add_zone(board, gnd, layer)
