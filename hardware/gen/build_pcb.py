@@ -83,18 +83,18 @@ def add_antenna_keepout(board):
     board.Add(z)
 
 
-def add_u1_escape(board, pad_number, net_name, x_offset, y_offset=0):
+def add_u1_escape(board, pad_number, net_name, x_offset, width=0.127):
     """Escape one crowded U1 pad to a via; Freerouting completes the net."""
     footprint = board.FindFootprintByReference("U1")
     pad = next(p for p in footprint.Pads() if p.GetNumber() == pad_number)
     net = board.FindNet(net_name)
     start = pad.GetPosition()
-    via_pos = pcbnew.VECTOR2I(start.x - mm(x_offset), start.y + mm(y_offset))
+    via_pos = pcbnew.VECTOR2I(start.x - mm(x_offset), start.y)
 
     track = pcbnew.PCB_TRACK(board)
     track.SetStart(start)
     track.SetEnd(via_pos)
-    track.SetWidth(mm(0.127))
+    track.SetWidth(mm(width))
     track.SetLayer(pcbnew.F_Cu)
     track.SetNet(net)
     track.SetLocked(True)
@@ -233,9 +233,17 @@ def place(out_dir):
 
     add_outline(board)
     add_antenna_keepout(board)
-    add_u1_escape(board, "12", "EPD_BUSY", 0.7)
-    add_u1_escape(board, "13", "SD_MISO", 1.1, 0.25)
-    add_u1_escape(board, "14", "SPI_SCLK", 1.5, 0.5)
+    for pad, net, offset, width in (
+        ("9", "EPD_DC", 0.8, 0.127),
+        ("10", "EPD_RST", 1.4, 0.127),
+        ("11", "+3V3", 0.8, 0.25),
+        ("12", "EPD_BUSY", 1.4, 0.127),
+        ("13", "SD_MISO", 0.8, 0.127),
+        ("14", "SPI_SCLK", 1.4, 0.127),
+        ("15", "BOOT", 0.8, 0.127),
+        ("16", "SPI_MOSI", 1.4, 0.127),
+    ):
+        add_u1_escape(board, pad, net, offset, width)
     # Only the In1 GND plane goes to the router (GND pads get vias to it); the
     # other pours are added after routing so they cannot fragment into islands.
     add_zone(board, netinfo["GND"], pcbnew.In1_Cu)
