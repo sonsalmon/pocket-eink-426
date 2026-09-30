@@ -1,0 +1,7 @@
+hardware/out/
+hardware/gen/__pycache__/
+firmware/crosspoint-reader/
+*.kicad_prl
+*-backups/
+fp-info-cache
+.DS_Store

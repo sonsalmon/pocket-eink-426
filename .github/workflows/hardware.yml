@@ -1,0 +1,85 @@
+name: hardware
+
+on:
+  push:
+    paths: ["hardware/**", ".github/workflows/hardware.yml"]
+  workflow_dispatch:
+
+jobs:
+  board:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install KiCad 9 (no 3D models)
+        run: |
+          sudo add-apt-repository -y ppa:kicad/kicad-9.0-releases
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends kicad kicad-footprints kicad-symbols
+          kicad-cli version
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Schematic + ERC
+        working-directory: hardware/gen
+        run: |
+          mkdir -p ../out
+          /usr/bin/python3 build_sch.py ../out
+          kicad-cli sch erc --severity-error --format json -o ../out/erc.json ../out/pocket-eink.kicad_sch || true
+          kicad-cli sch export pdf -o ../out/pocket-eink-schematic.pdf ../out/pocket-eink.kicad_sch
+
+      - name: Place parts, export DSN
+        working-directory: hardware/gen
+        run: /usr/bin/python3 build_pcb.py place ../out
+
+      - name: Autoroute (Freerouting)
+        working-directory: hardware/out
+        run: |
+          curl -sSL -o freerouting.jar https://github.com/freerouting/freerouting/releases/download/v2.4.1/freerouting-2.4.1.jar
+          timeout 25m java -jar freerouting.jar -de pocket-eink.dsn -do pocket-eink.ses -mp 40 --gui.enabled=false | tail -40
+          test -s pocket-eink.ses
+
+      - name: Import routes, DRC
+        working-directory: hardware/gen
+        run: |
+          /usr/bin/python3 build_pcb.py import ../out
+          kicad-cli pcb drc --format json --severity-error -o ../out/drc.json ../out/pocket-eink.kicad_pcb || true
+
+      - name: Fabrication outputs
+        if: always()
+        working-directory: hardware/out
+        run: |
+          mkdir -p fab
+          kicad-cli pcb export gerbers -o fab/ pocket-eink.kicad_pcb
+          kicad-cli pcb export drill -o fab/ pocket-eink.kicad_pcb
+          kicad-cli pcb export pos --format csv --units mm --side both -o fab/pos.csv pocket-eink.kicad_pcb
+          (cd ../gen && /usr/bin/python3 gen_jlc.py ../out/fab/pos.csv ../out/fab)
+          (cd fab && zip -q ../pocket-eink-gerbers.zip *.g* *.drl *.gbrjob 2>/dev/null || zip -q ../pocket-eink-gerbers.zip *)
+          kicad-cli pcb export svg --mode-single --layers F.Cu,F.SilkS,Edge.Cuts -o front.svg pocket-eink.kicad_pcb
+          kicad-cli pcb export svg --mode-single --layers B.Cu,Edge.Cuts -o back.svg pocket-eink.kicad_pcb
+          kicad-cli pcb render --side top --width 1600 --height 1200 -o render-top.png pocket-eink.kicad_pcb || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hardware-out
+          path: |
+            hardware/out/*.kicad_*
+            hardware/out/*.json
+            hardware/out/*.pdf
+            hardware/out/*.svg
+            hardware/out/*.png
+            hardware/out/*.zip
+            hardware/out/fab/*.csv
+
+      - name: Gate (ERC and DRC must be clean)
+        working-directory: hardware/ci
+        run: |
+          set +e
+          python3 report.py erc ../out/erc.json; erc=$?
+          python3 report.py drc ../out/drc.json; drc=$?
+          exit $(( erc | drc ))

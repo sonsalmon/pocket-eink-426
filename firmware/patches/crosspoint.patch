@@ -1,0 +1,85 @@
+diff --git a/platformio.ini b/platformio.ini
+index e6b5d0f..32191e0 100644
+--- a/platformio.ini
++++ b/platformio.ini
+@@ -264,6 +264,18 @@ build_flags =
+   ; serial output is disabled in slim builds to save space
+   -UENABLE_SERIAL_LOG
+ 
++; --- Pocket E-Ink 4.26 — ESP32-C3 + 16 MB flash, GDEY0426T82 (SSD1677 800x480) ----
++; Custom board from github.com/sonsalmon/pocket-eink-426 (X4 pinout, 3-key ladder).
++;   pio run -e pocket426 -t upload
++[env:pocket426]
++extends = base, firmware_tuned_c3
++build_flags =
++  ${base.build_flags}
++  -DFREEINK_DEVICE_POCKET426=1
++  -DCROSSPOINT_VERSION=\"${crosspoint.version}-pocket426\"
++  -DENABLE_SERIAL_LOG
++  -DLOG_LEVEL=1
++
+ ; --- Seeed Sticky — ESP32-S3R8, 3.97" 800x480 SSD1677 + GT911 touch -----------
+ ; Different MCU family than the C3 envs (one binary per family). The SDK
+ ; auto-enables CAP_TOUCH (GT911) and the BQ27220 gauge for this device. The
+diff --git a/src/activities/reader/EpubReaderActivity.cpp b/src/activities/reader/EpubReaderActivity.cpp
+index eb62ecd..8e71a2f 100644
+--- a/src/activities/reader/EpubReaderActivity.cpp
++++ b/src/activities/reader/EpubReaderActivity.cpp
+@@ -607,6 +607,24 @@ void EpubReaderActivity::loop() {
+     }
+   }
+ 
++#if FREEINK_DEVICE_POCKET426
++  // No Back key: a short center press is a full refresh, and the long press
++  // (synthesized as Back by the SDK) opens the reader menu instead of leaving.
++  if (confirmReleased) {
++    handleForcedRefresh();
++    return;
++  }
++  if (footnoteDepth == 0 && mappedInput.wasReleased(MappedInputManager::Button::Back)) {
++    if (usesToolbarMenu() && section) {
++      pendingManualTurn = 0;
++      openOverlay(Overlay::Toolbar);
++    } else {
++      openReaderMenu();
++    }
++    return;
++  }
++#endif
++
+   if (confirmReleased || ReaderUtils::isTouchMenuGesture(renderer, mappedInput)) {
+     // Toolbar style: the page is on screen and in the framebuffer, so paint the
+     // toolbar over it (one refresh) instead of pushing a full-screen menu.
+diff --git a/src/activities/reader/XtcReaderActivity.cpp b/src/activities/reader/XtcReaderActivity.cpp
+index 44bba17..976abc1 100644
+--- a/src/activities/reader/XtcReaderActivity.cpp
++++ b/src/activities/reader/XtcReaderActivity.cpp
+@@ -49,6 +49,13 @@ bool XtcReaderActivity::handleFormatInput() {
+     return false;
+   }
+ 
++#if FREEINK_DEVICE_POCKET426
++  if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
++    handleForcedRefresh();
++    return true;
++  }
++#endif
++
+   // Enter chapter selection activity on Confirm release or touch menu gesture
+   if (mappedInput.wasReleased(MappedInputManager::Button::Confirm) ||
+       ReaderUtils::isTouchMenuGesture(renderer, mappedInput)) {
+diff --git a/src/network/FirmwareBoardTag.cpp b/src/network/FirmwareBoardTag.cpp
+index b62ae1b..86097a4 100644
+--- a/src/network/FirmwareBoardTag.cpp
++++ b/src/network/FirmwareBoardTag.cpp
+@@ -7,7 +7,9 @@
+ // The board name derives from the FREEINK_DEVICE_* build flags so every env
+ // (and any fork built from this source) is tagged automatically. The combined
+ // X3/X4 ESP32-C3 binary is one compatibility class, tagged "x4".
+-#if FREEINK_DEVICE_X4PRO
++#if FREEINK_DEVICE_POCKET426
++#define CROSSPOINT_BOARD_NAME "pocket426"
++#elif FREEINK_DEVICE_X4PRO
+ #define CROSSPOINT_BOARD_NAME "x4pro"
+ #elif FREEINK_DEVICE_X4CLASSIC
+ #define CROSSPOINT_BOARD_NAME "x4c"

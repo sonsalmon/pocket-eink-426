@@ -1,0 +1,35 @@
+name: firmware
+
+on:
+  push:
+    paths: ["firmware/**", ".github/workflows/firmware.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ hashFiles('firmware/setup.sh') }}
+      - name: Patch CrossPoint
+        run: firmware/setup.sh
+      - name: Build pocket426
+        working-directory: firmware/crosspoint-reader
+        run: |
+          pip install -q platformio
+          pio run -e pocket426
+          ls -l .pio/build/pocket426/firmware.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pocket426-firmware
+          path: |
+            firmware/crosspoint-reader/.pio/build/pocket426/firmware.bin
+            firmware/crosspoint-reader/.pio/build/pocket426/bootloader.bin
+            firmware/crosspoint-reader/.pio/build/pocket426/partitions.bin
