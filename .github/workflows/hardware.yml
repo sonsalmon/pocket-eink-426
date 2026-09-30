@@ -4,6 +4,12 @@ on:
   push:
     paths: ["hardware/**", ".github/workflows/hardware.yml"]
   workflow_dispatch:
+    inputs:
+      reroute:
+        description: "Run Freerouting instead of the frozen production route"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   board:
@@ -33,10 +39,12 @@ jobs:
           kicad-cli sch export pdf -o ../out/pocket-eink-schematic.pdf ../out/pocket-eink.kicad_sch
 
       - name: Place parts, export DSN
+        if: ${{ inputs.reroute == true }}
         working-directory: hardware/gen
         run: /usr/bin/python3 build_pcb.py place ../out
 
       - name: Autoroute (Freerouting)
+        if: ${{ inputs.reroute == true }}
         working-directory: hardware/out
         run: |
           curl -sSL -o freerouting.jar https://github.com/freerouting/freerouting/releases/download/v2.4.1/freerouting-2.4.1.jar
@@ -51,10 +59,20 @@ jobs:
           test -s pocket-eink.ses
 
       - name: Import routes, DRC
+        if: ${{ inputs.reroute == true }}
         working-directory: hardware/gen
         run: |
           /usr/bin/python3 build_pcb.py import ../out
-          kicad-cli pcb drc --format json --severity-error -o ../out/drc.json ../out/pocket-eink.kicad_pcb || true
+
+      - name: Restore and guard frozen production route
+        if: ${{ inputs.reroute != true }}
+        run: |
+          base64 --decode hardware/routed/pocket-eink.kicad_pcb.xz.b64 | xz --decompress > hardware/out/pocket-eink.kicad_pcb
+          /usr/bin/python3 hardware/ci/check_frozen.py hardware/out/pocket-eink.kicad_pcb
+
+      - name: DRC
+        working-directory: hardware/out
+        run: kicad-cli pcb drc --format json --severity-error -o drc.json pocket-eink.kicad_pcb || true
 
       - name: Fabrication outputs
         if: always()
@@ -65,7 +83,9 @@ jobs:
           kicad-cli pcb export drill -o fab/ pocket-eink.kicad_pcb
           kicad-cli pcb export pos --format csv --units mm --side both -o fab/pos.csv pocket-eink.kicad_pcb
           (cd ../gen && /usr/bin/python3 gen_jlc.py ../out/fab/pos.csv ../out/fab)
-          (cd fab && zip -q ../pocket-eink-gerbers.zip *.g* *.drl *.gbrjob 2>/dev/null || zip -q ../pocket-eink-gerbers.zip *)
+          python3 ../ci/normalize_fab.py fab
+          (cd fab && find . -maxdepth 1 -type f \( -name '*.g*' -o -name '*.drl' \) -print0 | sort -z | xargs -0 zip -X -q ../pocket-eink-gerbers.zip)
+          sha256sum pocket-eink-gerbers.zip > pocket-eink-gerbers.zip.sha256
           kicad-cli pcb export svg --mode-single --layers F.Cu,F.SilkS,Edge.Cuts -o front.svg pocket-eink.kicad_pcb
           kicad-cli pcb export svg --mode-single --layers B.Cu,Edge.Cuts -o back.svg pocket-eink.kicad_pcb
           kicad-cli pcb render --side top --width 1600 --height 1200 -o render-top.png pocket-eink.kicad_pcb || true
@@ -81,6 +101,7 @@ jobs:
             hardware/out/*.svg
             hardware/out/*.png
             hardware/out/*.zip
+            hardware/out/*.sha256
             hardware/out/fab/*.csv
 
       - name: Gate (ERC and DRC must be clean)
