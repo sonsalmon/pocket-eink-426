@@ -8,24 +8,45 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Patch CrossPoint
+        run: firmware/setup.sh
+
+      # Same toolchain pins as CrossPoint's own ci.yml at the pinned commit.
+      - name: Install PlatformIO Core
+        run: |
+          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.19.zip
+          uv pip install --system -U "littlefs-python>=0.16.0" "fatfs-ng>=0.1.14" "pyyaml>=6.0.2" \
+            "rich-click>=1.8.6" "zopfli>=0.2.2" "intelhex>=2.3.0" "rich>=14.0.0" "urllib3<2" \
+            "cryptography>=45.0.3" "certifi>=2025.8.3" "ecdsa>=0.19.1" "bitstring>=4.3.1" \
+            "reedsolo>=1.5.3,<1.8" "esp-idf-size>=2.0.0" "esp-coredump>=1.14.0"
+
       - uses: actions/cache@v4
         with:
           path: ~/.platformio
-          key: pio-${{ hashFiles('firmware/setup.sh') }}
-      - name: Patch CrossPoint
-        run: firmware/setup.sh
+          key: pio-pocket426-${{ hashFiles('firmware/setup.sh') }}
+
+      - name: Pin pioarduino core inside the platform penv
+        working-directory: firmware/crosspoint-reader
+        run: |
+          pio pkg install -e pocket426
+          uv pip install --python ~/.platformio/penv/bin/python "pioarduino==6.1.19"
+
       - name: Build pocket426
         working-directory: firmware/crosspoint-reader
         run: |
-          pip install -q platformio
-          pio run -e pocket426
+          set -o pipefail
+          pio run -e pocket426 | tee pio.log
+          grep -E "RAM:|Flash:" pio.log >> "$GITHUB_STEP_SUMMARY" || true
           ls -l .pio/build/pocket426/firmware.bin
+
       - uses: actions/upload-artifact@v4
         with:
           name: pocket426-firmware
