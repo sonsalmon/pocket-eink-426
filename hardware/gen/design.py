@@ -125,15 +125,15 @@ part("AE1", f"{LIB_POCKET}:FILTER-SMD_1206-2P-L3.2-W1.6-L", "RFANT3216120A5T", "
 # Supply decoupling near the MCU
 part("C5", C0603, "10uF", "C19702", 41.2, 16.4, 90, two("+3V3", "GND"))
 part("C6", C0402, "100nF", "C1525", 46.6, 7.6, 0, two("+3V3", "GND"), desc="VDD3P3 pins 2/3")
-part("C7", C0402, "100nF", "C1525", 38.5, 11.2, 90, two("+3V3", "GND"), desc="VDD3P3_RTC")
+part("C7", C0402, "100nF", "C1525", 40.2, 10.4, 90, two("+3V3", "GND"), desc="VDD3P3_RTC")
 part("C8", C0402, "100nF", "C1525", 43.6, 16.6, 0, two("+3V3", "GND"), desc="VDD3P3_CPU")
 part("C9", C0402, "1uF", "C14445", 45.6, 16.6, 0, two("VDD_SPI", "GND"), desc="VDD_SPI -> flash")
 part("C10", C0402, "100nF", "C1525", 49.8, 16.0, 90, two("+3V3", "GND"), desc="VDDA 31/32")
 part("C11", C0402, "100nF", "C1525", 51.8, 19, 90, two("VDD_SPI", "GND"), desc="flash VCC")
 part("R3", R0402, "10k", "C25744", 43.4, 7.4, 90, two("+3V3", "EN"))
 part("C12", C0402, "1uF", "C14445", 42.2, 7.4, 90, two("EN", "GND"), desc="EN RC delay")
-part("R4", R0402, "10k", "C25744", 38.5, 13.4, 90, two("+3V3", "BOOT"), desc="GPIO9 strap high")
-part("R5", R0402, "10k", "C25744", 37.3, 13.4, 90, two("+3V3", "SPI_SCLK"), desc="GPIO8 strap high")
+part("R4", R0402, "10k", "C25744", 40.2, 13.4, 90, two("+3V3", "BOOT"), desc="GPIO9 strap high")
+part("R5", R0402, "10k", "C25744", 39.0, 13.4, 90, two("+3V3", "SPI_SCLK"), desc="GPIO8 strap high")
 
 # ------------------------------------------------------------ battery ------
 part("TP1", "TestPoint:TestPoint_Pad_1.0x1.0mm", "BAT+", "", 2.5, 29, 0,

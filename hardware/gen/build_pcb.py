@@ -6,6 +6,7 @@
 Routing between the two steps is done by Freerouting (see .github/workflows/hardware.yml).
 """
 import json
+import math
 import os
 import sys
 
@@ -83,6 +84,22 @@ def add_antenna_keepout(board):
     board.Add(z)
 
 
+def check_escape_clearance(board, position, net, minimum=0.35):
+    for footprint in board.GetFootprints():
+        for pad in footprint.Pads():
+            if pad.GetNetCode() == net.GetNetCode():
+                continue
+            box = pad.GetBoundingBox()
+            dx = max(box.GetX() - position.x, 0, position.x - (box.GetX() + box.GetWidth()))
+            dy = max(box.GetY() - position.y, 0, position.y - (box.GetY() + box.GetHeight()))
+            distance = pcbnew.ToMM(math.hypot(dx, dy))
+            if distance < minimum:
+                raise SystemExit(
+                    f"U1 escape via is {distance:.3f} mm from "
+                    f"{footprint.GetReference()} pad {pad.GetNumber()} [{pad.GetNetname()}]"
+                )
+
+
 def add_u1_escape(board, pad_number, net_name, x_offset, width=0.127):
     """Escape one crowded U1 pad to a via; Freerouting completes the net."""
     footprint = board.FindFootprintByReference("U1")
@@ -90,6 +107,7 @@ def add_u1_escape(board, pad_number, net_name, x_offset, width=0.127):
     net = board.FindNet(net_name)
     start = pad.GetPosition()
     via_pos = pcbnew.VECTOR2I(start.x - mm(x_offset), start.y)
+    check_escape_clearance(board, via_pos, net)
 
     track = pcbnew.PCB_TRACK(board)
     track.SetStart(start)
