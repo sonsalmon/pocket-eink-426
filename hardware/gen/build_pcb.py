@@ -6,7 +6,6 @@
 Routing between the two steps is done by Freerouting (see .github/workflows/hardware.yml).
 """
 import json
-import math
 import os
 import sys
 
@@ -65,7 +64,7 @@ def add_zone(board, net, layer, priority=0):
     z.SetAssignedPriority(priority)
     z.SetLocalClearance(mm(0.2))
     z.SetMinThickness(mm(0.2))
-    z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL)
+    z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
     z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)
     rect_outline(z, 0.3, 0.3, D.BOARD_W - 0.3, D.BOARD_H - 0.3)
     board.Add(z)
@@ -77,14 +76,14 @@ def add_antenna_keepout(board):
     z.SetLayerSet(pcbnew.LSET.AllCuMask())
     (getattr(z, "SetDoNotAllowZoneFills", None) or z.SetDoNotAllowCopperPour)(True)
     z.SetDoNotAllowVias(True)
-    z.SetDoNotAllowTracks(False)  # the feed trace has to reach the antenna pad
+    z.SetDoNotAllowTracks(True)
     z.SetDoNotAllowPads(False)
     z.SetDoNotAllowFootprints(False)
     rect_outline(z, *D.ANT_KEEPOUT)
     board.Add(z)
 
 
-def check_escape_clearance(board, position, net, minimum=0.35):
+def clear_of_foreign_pads(board, position, net, minimum=0.35):
     for footprint in board.GetFootprints():
         for pad in footprint.Pads():
             if pad.GetNetCode() == net.GetNetCode():
@@ -92,39 +91,30 @@ def check_escape_clearance(board, position, net, minimum=0.35):
             box = pad.GetBoundingBox()
             dx = max(box.GetX() - position.x, 0, position.x - (box.GetX() + box.GetWidth()))
             dy = max(box.GetY() - position.y, 0, position.y - (box.GetY() + box.GetHeight()))
-            distance = pcbnew.ToMM(math.hypot(dx, dy))
-            if distance < minimum:
-                raise SystemExit(
-                    f"U1 escape via is {distance:.3f} mm from "
-                    f"{footprint.GetReference()} pad {pad.GetNumber()} [{pad.GetNetname()}]"
-                )
+            if pcbnew.ToMM((dx * dx + dy * dy) ** 0.5) < minimum:
+                return False
+    return True
 
 
-def add_u1_escape(board, pad_number, net_name, x_offset, width=0.127):
-    """Escape one crowded U1 pad to a via; Freerouting completes the net."""
-    footprint = board.FindFootprintByReference("U1")
-    pad = next(p for p in footprint.Pads() if p.GetNumber() == pad_number)
-    net = board.FindNet(net_name)
-    start = pad.GetPosition()
-    via_pos = pcbnew.VECTOR2I(start.x - mm(x_offset), start.y)
-    check_escape_clearance(board, via_pos, net)
-
-    track = pcbnew.PCB_TRACK(board)
-    track.SetStart(start)
-    track.SetEnd(via_pos)
-    track.SetWidth(mm(width))
-    track.SetLayer(pcbnew.F_Cu)
-    track.SetNet(net)
-    track.SetLocked(True)
-    board.Add(track)
-
-    via = pcbnew.PCB_VIA(board)
-    via.SetPosition(via_pos)
-    via.SetWidth(mm(0.5))
-    via.SetDrill(mm(0.3))
-    via.SetNet(net)
-    via.SetLocked(True)
-    board.Add(via)
+def add_ground_stitching(board, net):
+    """Tie the continuous B.Cu ground plane together around the board."""
+    candidates = [
+        (1, 1), (12, 1), (24, 1), (38, 1), (50, 1), (61, 1),
+        (1, 10), (61, 10), (1, 20), (61, 26),
+        (22, 27), (32, 27), (40, 27), (51, 27),
+        (21, 44), (32, 44), (40, 44), (52, 44), (61, 44),
+    ]
+    for x, y in candidates:
+        pos = pt(x, y)
+        if not clear_of_foreign_pads(board, pos, net):
+            continue
+        via = pcbnew.PCB_VIA(board)
+        via.SetPosition(pos)
+        via.SetWidth(mm(0.5))
+        via.SetDrill(mm(0.3))
+        via.SetNet(net)
+        via.SetLocked(True)
+        board.Add(via)
 
 
 def enforce_min_track_width(board):
@@ -133,27 +123,6 @@ def enforce_min_track_width(board):
     for item in board.GetTracks():
         if not isinstance(item, pcbnew.PCB_VIA) and item.GetWidth() < minimum:
             item.SetWidth(minimum)
-
-
-def nudge_vcom_via(board):
-    """Move the lower VCOM via left with its connected track endpoints."""
-    net = board.FindNet("VCOM")
-    items = board.GetTracks()
-    vias = [
-        item for item in items
-        if isinstance(item, pcbnew.PCB_VIA) and item.GetNetCode() == net.GetNetCode()
-    ]
-    via = max(vias, key=lambda item: item.GetPosition().y)
-    old = via.GetPosition()
-    new = pcbnew.VECTOR2I(old.x - mm(0.2), old.y + mm(0.2))
-    for item in items:
-        if isinstance(item, pcbnew.PCB_VIA) or item.GetNetCode() != net.GetNetCode():
-            continue
-        if item.GetStart() == old:
-            item.SetStart(new)
-        if item.GetEnd() == old:
-            item.SetEnd(new)
-    via.SetPosition(new)
 
 
 def write_project(out_dir):
@@ -172,13 +141,13 @@ def write_project(out_dir):
         "board": {"design_settings": {
             "defaults": {
                 "board_outline_line_width": 0.1, "copper_line_width": 0.2,
-                "solder_mask_clearance": 0.0, "solder_mask_min_width": 0.05,
+                "solder_mask_clearance": 0.0, "solder_mask_min_width": 0.10,
             },
             "rules": {
                 "min_clearance": 0.127, "min_track_width": 0.09, "min_via_diameter": 0.4,
                 "min_via_annular_width": 0.1, "min_through_hole_diameter": 0.2,
                 "min_hole_to_hole": 0.25, "min_copper_edge_clearance": 0.3,
-                "min_silk_clearance": 0.0, "min_hole_clearance": 0.2,
+                "min_silk_clearance": 0.15, "min_hole_clearance": 0.2,
             },
             "track_widths": [0.15, 0.25, 0.35],
             "via_dimensions": [{"diameter": 0.5, "drill": 0.3}],
@@ -204,12 +173,13 @@ def apply_rules(board, router_margin=False):
     ds.m_HoleClearance = mm(0.2)
     ds.m_HoleToHoleMin = mm(0.25)
     ds.m_SolderMaskExpansion = mm(0)
-    ds.m_SolderMaskMinWidth = mm(0.05)
+    ds.m_SolderMaskMinWidth = mm(0.10)
+    ds.m_SilkClearance = mm(0.15)
     ns = ds.m_NetSettings
     classes = {}
     for name, (width, clearance) in D.NETCLASSES.items():
-        if router_margin and name == "HV":
-            clearance += 0.05
+        if router_margin and name in ("Default", "HV"):
+            clearance += 0.03
         nc = ns.GetDefaultNetclass() if name == "Default" else pcbnew.NETCLASS(name)
         nc.SetTrackWidth(mm(width))
         nc.SetClearance(mm(clearance))
@@ -229,8 +199,8 @@ def apply_rules(board, router_margin=False):
 def place(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     board = pcbnew.BOARD()
-    board.SetCopperLayerCount(4)
-    board.GetDesignSettings().SetBoardThickness(mm(0.8))
+    board.SetCopperLayerCount(2)
+    board.GetDesignSettings().SetBoardThickness(mm(1.0))
 
     netinfo = {}
     for name in D.nets():
@@ -272,20 +242,9 @@ def place(out_dir):
 
     add_outline(board)
     add_antenna_keepout(board)
-    for pad, net, offset, width in (
-        ("9", "EPD_DC", 0.8, 0.127),
-        ("10", "EPD_RST", 1.4, 0.127),
-        ("11", "+3V3", 0.8, 0.25),
-        ("12", "EPD_BUSY", 1.4, 0.127),
-        ("13", "SD_MISO", 0.8, 0.127),
-        ("14", "SPI_SCLK", 1.4, 0.127),
-        ("15", "BOOT", 0.8, 0.127),
-        ("16", "SPI_MOSI", 1.4, 0.127),
-    ):
-        add_u1_escape(board, pad, net, offset, width)
-    # Only the In1 GND plane goes to the router (GND pads get vias to it); the
-    # other pours are added after routing so they cannot fragment into islands.
-    add_zone(board, netinfo["GND"], pcbnew.In1_Cu)
+    add_ground_stitching(board, netinfo["GND"])
+    # The bottom layer is a continuous ground reference. Signals route on F.Cu.
+    add_zone(board, netinfo["GND"], pcbnew.B_Cu)
 
     pcb_path = os.path.join(out_dir, f"{NAME}.kicad_pcb")
     pcbnew.SaveBoard(pcb_path, board)
@@ -309,10 +268,8 @@ def import_ses(out_dir):
     if not pcbnew.ImportSpecctraSES(board, os.path.join(out_dir, f"{NAME}.ses")):
         raise SystemExit("Specctra SES import failed")
     enforce_min_track_width(board)
-    nudge_vcom_via(board)
     gnd = board.FindNet("GND")
-    for layer in (pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu):
-        add_zone(board, gnd, layer)
+    add_zone(board, gnd, pcbnew.F_Cu)
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
     pcbnew.SaveBoard(pcb_path, board)
     write_project(out_dir)
