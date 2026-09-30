@@ -54,3 +54,21 @@ jobs:
             firmware/crosspoint-reader/.pio/build/pocket426/firmware.bin
             firmware/crosspoint-reader/.pio/build/pocket426/bootloader.bin
             firmware/crosspoint-reader/.pio/build/pocket426/partitions.bin
+
+  bench:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build bench test
+        working-directory: firmware/bench
+        run: |
+          pip install -q platformio==6.1.18
+          pio run -e bench
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench-firmware
+          path: firmware/bench/.pio/build/bench/firmware.bin
