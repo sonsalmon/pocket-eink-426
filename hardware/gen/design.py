@@ -66,7 +66,7 @@ ESP_PINS = {
     "17": ("IO1", "BTN_ADC"), "18": ("IO0", "BAT_SENSE"), "19": ("EP", "GND"),
 }
 part("U1", f"{LIB_POCKET}:ESP32-C3-WROOM-02-N4", "ESP32-C3-WROOM-02-N4", "C2934560",
-     13.1, 35.2, 90, ESP_PINS, desc="Wi-Fi/BLE module with 4 MB flash and PCB antenna")
+     13.1, 34.8, 90, ESP_PINS, desc="Wi-Fi/BLE module with 4 MB flash and PCB antenna")
 # Supply and boot support at the module's board-facing side.
 part("C5", C0603, "10uF", "C19702", 27.0, 24.0, 90, two("+3V3", "GND"))
 part("C6", C0603, "100nF", "C14663", 29.0, 24.0, 90, two("+3V3", "GND"))
