@@ -38,8 +38,10 @@ bool read_book_info(const std::string& path, BookInfo& book) {
 
 }  // namespace
 
-BookStore::BookStore(OpenBookHandler open_handler)
-    : open_handler_(std::move(open_handler)) {}
+BookStore::BookStore(OpenBookHandler open_handler,
+                     std::function<void()> change_handler)
+    : open_handler_(std::move(open_handler)),
+      change_handler_(std::move(change_handler)) {}
 
 bool BookStore::begin() {
   if (!LittleFS.begin(true)) {
@@ -90,11 +92,20 @@ bool BookStore::create_book(const BookInfo& book) {
   document["pages"] = book.pages;
   document["last"] = 0;
   document["window"] = false;
-  return serializeJson(document, file) > 0;
+  const bool saved = serializeJson(document, file) > 0;
+  file.close();
+  if (saved && change_handler_) {
+    change_handler_();
+  }
+  return saved;
 }
 
 bool BookStore::finish_book(const std::string_view id) {
-  return LittleFS.exists(book_meta_path(id).c_str());
+  const bool exists = LittleFS.exists(book_meta_path(id).c_str());
+  if (exists && change_handler_) {
+    change_handler_();
+  }
+  return exists;
 }
 
 bool BookStore::delete_book(const std::string_view id) {
@@ -120,6 +131,8 @@ bool BookStore::open_book(const std::string_view id, const std::size_t page) {
   if (!save_last(id, page)) {
     return false;
   }
+  current_book_ = id;
+  current_page_ = page;
   open_handler_(std::string(id), page);
   return page_exists(id, page);
 }

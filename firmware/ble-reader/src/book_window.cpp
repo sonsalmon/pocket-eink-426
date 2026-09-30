@@ -67,25 +67,41 @@ PagePrepareResult BookStore::prepare_page(const std::string_view id,
                                           const std::size_t page,
                                           const std::size_t length) {
   if (free_bytes() < length) {
-    std::size_t last = page;
-    for (const BookInfo& book : list_books()) {
-      if (book.id == id) {
-        last = book.last;
-        break;
+    std::string reading = current_book_;
+    std::size_t last = current_page_;
+    if (reading.empty()) {
+      reading = id;
+      last = page;
+      for (const BookInfo& book : list_books()) {
+        if (book.id == id) {
+          last = book.last;
+          break;
+        }
       }
     }
     const EvictionPlan plan =
-        plan_eviction(cached_pages(), free_bytes(), length, id, last);
+        plan_eviction(cached_pages(), free_bytes(), length, reading, last);
     if (!plan.enough) {
       return PagePrepareResult::Space;
+    }
+    std::vector<std::string> affected;
+    for (const CachedPage& victim : plan.pages) {
+      if (std::find(affected.begin(), affected.end(), victim.book) ==
+          affected.end()) {
+        // Persist refill mode before removing any page, including on errors.
+        if (!set_window_mode(victim.book, true)) {
+          return PagePrepareResult::Storage;
+        }
+        affected.push_back(victim.book);
+      }
     }
     for (const CachedPage& victim : plan.pages) {
       if (!LittleFS.remove(page_path(victim.book, victim.page).c_str())) {
         return PagePrepareResult::Storage;
       }
     }
-    if (plan.current_book_shrunk && !set_window_mode(id, true)) {
-      return PagePrepareResult::Storage;
+    if (change_handler_) {
+      change_handler_();
     }
   }
   return open_page_file(id, page) ? PagePrepareResult::Ready
@@ -96,12 +112,19 @@ bool BookStore::configure_window(const std::string_view id,
                                  const std::size_t from,
                                  const std::size_t to) {
   for (const std::size_t page : list_pages(id)) {
-    if ((page < from || page > to) &&
+    if ((id != current_book_ || page != current_page_) &&
+        (page < from || page > to) &&
         !LittleFS.remove(page_path(id, page).c_str())) {
       return false;
     }
   }
-  return set_window_mode(id, true);
+  if (!set_window_mode(id, true)) {
+    return false;
+  }
+  if (change_handler_) {
+    change_handler_();
+  }
+  return true;
 }
 
 NeedRange BookStore::need_request(const std::string_view id,

@@ -17,7 +17,8 @@ using OpenBookHandler =
 
 class BookStore final : public ProtocolBackend {
  public:
-  explicit BookStore(OpenBookHandler open_handler);
+  explicit BookStore(OpenBookHandler open_handler,
+                     std::function<void()> change_handler = {});
 
   bool begin();
   std::size_t free_bytes() const override;
@@ -48,6 +49,9 @@ class BookStore final : public ProtocolBackend {
   std::vector<CachedPage> cached_pages() const;
 
   OpenBookHandler open_handler_;
+  std::function<void()> change_handler_;
+  std::string current_book_;
+  std::size_t current_page_ = 0;
   fs::File page_file_;
   std::string temporary_path_;
   std::string final_path_;

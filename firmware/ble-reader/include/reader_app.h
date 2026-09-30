@@ -4,12 +4,16 @@
 #include <string>
 #include <vector>
 
-#include "ble_transport.h"
 #include "book_store.h"
 #include "core/ladder.h"
 #include "core/protocol_service.h"
+#ifdef POCKET_HOST_TEST
+#include "host_devices.h"
+#else
+#include "ble_transport.h"
 #include "display_controller.h"
 #include "wifi_transport.h"
+#endif
 
 namespace pocket {
 
