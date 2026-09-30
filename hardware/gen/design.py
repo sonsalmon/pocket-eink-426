@@ -26,9 +26,9 @@ ANT_KEEPOUT = (51.0, 0.0, 62.0, 7.5)  # x0, y0, x1, y1
 
 # Net classes: name -> (track width, clearance) in mm
 NETCLASSES = {
-    "Default": (0.15, 0.15),
-    "Power": (0.35, 0.18),
-    "HV": (0.25, 0.25),  # e-paper gate/source rails, up to about +-22 V
+    "Default": (0.127, 0.127),
+    "Power": (0.25, 0.15),
+    "HV": (0.25, 0.15),  # e-paper gate/source rails, up to about +-22 V; FPC pads sit 0.2 mm apart
     "RF": (0.30, 0.20),
 }
 NET_CLASS_OF = {
@@ -108,10 +108,10 @@ part("Y1", "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm", "40MHz", "C254336", 52.2, 
     "1": ("X1", "XTAL_P"), "2": ("GND", "GND"), "3": ("X2", "XTAL_N"), "4": ("GND", "GND")})
 part("R1", R0402, "0R", "C17168", 50.4, 9, 0, two("XTAL_P", "XTAL_P_CHIP"),
      desc="XTAL_P series, Espressif tuning position")
-part("C1", C0402, "12pF", "C1547", 54.4, 11.4, 90, two("XTAL_P", "GND"))
-part("C2", C0402, "12pF", "C1547", 54.4, 13.6, 90, two("XTAL_N", "GND"))
+part("C1", C0402, "12pF", "C1547", 55, 10.8, 90, two("XTAL_P", "GND"))
+part("C2", C0402, "12pF", "C1547", 55, 14, 90, two("XTAL_N", "GND"))
 # RF: pi network (shunt C DNP / series 0R / shunt C DNP) then chip antenna
-part("C3", C0402, "DNP", "", 48.4, 8, 90, two("RF_LNA", "GND"), dnp=True, desc="RF match shunt 1")
+part("C3", C0402, "DNP", "", 48.4, 7.6, 90, two("RF_LNA", "GND"), dnp=True, desc="RF match shunt 1")
 part("R2", R0402, "0R", "C17168", 49.2, 6.2, 0, two("RF_LNA", "RF_ANT"), desc="RF match series")
 part("C4", C0402, "DNP", "", 51, 6, 90, two("RF_ANT", "GND"), dnp=True, desc="RF match shunt 2")
 part("AE1", f"{LIB_POCKET}:FILTER-SMD_1206-2P-L3.2-W1.6-L", "RFANT3216120A5T", "C127629",
@@ -171,7 +171,7 @@ part("C18", C0603, "1uF", "C15849", 25.2, 29.8, 90, two("VBAT", "GND"))
 part("C19", C0603, "10uF", "C19702", 30.8, 29.8, 90, two("+3V3", "GND"))
 
 # ----------------------------------------------------------- microSD -------
-part("J1", "Connector_Card:microSD_HC_Hirose_DM3AT-SF-PEJM5", "microSD", "C114218", 6.4, 12.0, -90, {
+part("J1", "Connector_Card:microSD_HC_Hirose_DM3AT-SF-PEJM5", "microSD", "C114218", 7.6, 12, -90, {
     "1": ("DAT2", "SD_DAT2"), "2": ("CD/DAT3", "SD_CS"), "3": ("CMD", "SPI_MOSI"),
     "4": ("VDD", "SD_VDD"), "5": ("CLK", "SPI_SCLK"), "6": ("VSS", "GND"),
     "7": ("DAT0", "SD_MISO"), "8": ("DAT1", "SD_DAT1"), "9": ("DET", "GND"),
@@ -206,10 +206,10 @@ part("J2", "Connector_FFC-FPC:Hirose_FH12-24S-0.5SH_1x24-1MP_P0.50mm_Horizontal"
      desc="under the panel, opening toward the panel's FPC edge; verify contact side and pin 1")
 part("L1", f"{LIB_POCKET}:IND-SMD_L4.0-W4.0_FNR4012S", "47uH", "C167794", 21, 17, 0,
      two("+3V3", "EPD_SW"), desc="boost inductor, 1.2 mm tall")
-part("Q3", "Package_TO_SOT_SMD:SOT-323_SC-70", "Si1308EDL", "C469327", 25.2, 16.2, 0, {
+part("Q3", "Package_TO_SOT_SMD:SOT-323_SC-70", "Si1308EDL", "C469327", 25.8, 16, 0, {
     "1": ("G", "GDR"), "2": ("S", "RESE"), "3": ("D", "EPD_SW")})
-part("R17", R0603, "2.2R", "C22939", 25.2, 18.6, 0, two("RESE", "GND"), desc="current sense")
-part("R18", R0402, "1M", "C26083", 27.4, 16.2, 90, two("GDR", "GND"))
+part("R17", R0603, "2.2R", "C22939", 25.8, 18.6, 0, two("RESE", "GND"), desc="current sense")
+part("R18", R0402, "1M", "C26083", 25.8, 20.4, 0, two("GDR", "GND"))
 part("D2", "Diode_SMD:D_SOD-123", "MBR0530", "C77336", 30.5, 15.2, 0,
      {"1": ("K", "EPD_NEG"), "2": ("A", "PREVGL")})
 part("D3", "Diode_SMD:D_SOD-123", "MBR0530", "C77336", 30.5, 17.6, 0,

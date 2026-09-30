@@ -64,9 +64,8 @@ def add_zone(board, net, layer, priority=0):
     z.SetAssignedPriority(priority)
     z.SetLocalClearance(mm(0.2))
     z.SetMinThickness(mm(0.2))
-    z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
-    z.SetThermalReliefGap(mm(0.25))
-    z.SetThermalReliefSpokeWidth(mm(0.3))
+    z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL)
+    z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)
     rect_outline(z, 0.3, 0.3, D.BOARD_W - 0.3, D.BOARD_H - 0.3)
     board.Add(z)
 
@@ -161,15 +160,15 @@ def place(out_dir):
 
     add_outline(board)
     add_antenna_keepout(board)
+    # Only the In1 GND plane goes to the router (GND pads get vias to it); the
+    # other pours are added after routing so they cannot fragment into islands.
     add_zone(board, netinfo["GND"], pcbnew.In1_Cu)
-    add_zone(board, netinfo["+3V3"], pcbnew.In2_Cu)
-    add_zone(board, netinfo["GND"], pcbnew.B_Cu)
-    add_zone(board, netinfo["GND"], pcbnew.F_Cu)
 
     pcb_path = os.path.join(out_dir, f"{NAME}.kicad_pcb")
-    write_project(out_dir)
     pcbnew.SaveBoard(pcb_path, board)
-    # Reload so the project's net classes are attached before the DSN export.
+    # SaveBoard writes a default .kicad_pro; overwrite it, then reload so the
+    # net classes and rules are attached before the DSN export.
+    write_project(out_dir)
     board = pcbnew.LoadBoard(pcb_path)
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
     if not pcbnew.ExportSpecctraDSN(board, os.path.join(out_dir, f"{NAME}.dsn")):
@@ -183,6 +182,9 @@ def import_ses(out_dir):
     board = pcbnew.LoadBoard(pcb_path)
     if not pcbnew.ImportSpecctraSES(board, os.path.join(out_dir, f"{NAME}.ses")):
         raise SystemExit("Specctra SES import failed")
+    gnd = board.FindNet("GND")
+    for layer in (pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu):
+        add_zone(board, gnd, layer)
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
     pcbnew.SaveBoard(pcb_path, board)
     tracks = sum(1 for t in board.GetTracks())

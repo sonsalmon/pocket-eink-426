@@ -40,7 +40,7 @@ jobs:
         working-directory: hardware/out
         run: |
           curl -sSL -o freerouting.jar https://github.com/freerouting/freerouting/releases/download/v2.4.1/freerouting-2.4.1.jar
-          timeout 25m java -jar freerouting.jar -de pocket-eink.dsn -do pocket-eink.ses -mp 40 --gui.enabled=false | tail -40
+          timeout 25m java -jar freerouting.jar -de pocket-eink.dsn -do pocket-eink.ses -mp 100 --gui.enabled=false | tail -40
           test -s pocket-eink.ses
 
       - name: Import routes, DRC
