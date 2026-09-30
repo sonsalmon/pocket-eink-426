@@ -83,76 +83,6 @@ def add_antenna_keepout(board):
     board.Add(z)
 
 
-def add_track(board, net, layer, start, end, width=0.127):
-    track = pcbnew.PCB_TRACK(board)
-    track.SetStart(start)
-    track.SetEnd(end)
-    track.SetWidth(mm(width))
-    track.SetLayer(layer)
-    track.SetNet(net)
-    track.SetLocked(True)
-    board.Add(track)
-
-
-def add_via(board, net, position):
-    via = pcbnew.PCB_VIA(board)
-    via.SetPosition(position)
-    via.SetWidth(mm(0.5))
-    via.SetDrill(mm(0.3))
-    via.SetNet(net)
-    via.SetLocked(True)
-    board.Add(via)
-
-
-def find_pad(board, ref, number):
-    footprint = board.FindFootprintByReference(ref)
-    return next(pad for pad in footprint.Pads() if pad.GetNumber() == number)
-
-
-def route_epd_busy(board):
-    """Complete the router's dead-end stub with a deterministic bottom route."""
-    net = board.FindNet("EPD_BUSY")
-    j2 = find_pad(board, "J2", "9").GetPosition()
-    u1 = find_pad(board, "U1", "12").GetPosition()
-    j2_via = pt(29.25, 1.5)
-    u1_via = pt(42.8, 11.75)
-
-    add_track(board, net, pcbnew.F_Cu, j2, j2_via)
-    add_via(board, net, j2_via)
-    add_track(board, net, pcbnew.B_Cu, j2_via, pt(42.8, 1.5))
-    add_track(board, net, pcbnew.B_Cu, pt(42.8, 1.5), u1_via)
-    add_via(board, net, u1_via)
-    add_track(board, net, pcbnew.F_Cu, u1_via, u1)
-
-
-def route_xtal_n(board):
-    """Keep the crystal return short and include its load capacitor branch."""
-    net = board.FindNet("XTAL_N")
-    u1 = find_pad(board, "U1", "29").GetPosition()
-    y1 = find_pad(board, "Y1", "3").GetPosition()
-    c2 = find_pad(board, "C2", "1").GetPosition()
-    add_track(board, net, pcbnew.F_Cu, u1, y1)
-    add_track(board, net, pcbnew.F_Cu, y1, c2)
-
-
-def route_xtal_p_chip(board):
-    """Reserve the short MCU-to-series-resistor crystal connection."""
-    net = board.FindNet("XTAL_P_CHIP")
-    u1 = find_pad(board, "U1", "30").GetPosition()
-    r1 = find_pad(board, "R1", "2").GetPosition()
-    add_track(board, net, pcbnew.F_Cu, u1, r1)
-
-
-def route_xtal_p(board):
-    """Reserve the crystal output and its load capacitor branch."""
-    net = board.FindNet("XTAL_P")
-    r1 = find_pad(board, "R1", "1").GetPosition()
-    y1 = find_pad(board, "Y1", "1").GetPosition()
-    c1 = find_pad(board, "C1", "1").GetPosition()
-    add_track(board, net, pcbnew.F_Cu, r1, y1)
-    add_track(board, net, pcbnew.F_Cu, y1, c1)
-
-
 def enforce_min_track_width(board):
     """Freerouting can neck short QFN escape segments below the DSN rule."""
     minimum = mm(0.09)
@@ -175,7 +105,10 @@ def write_project(out_dir):
     patterns = [{"netclass": cls, "pattern": net} for net, cls in D.NET_CLASS_OF.items()]
     project = {
         "board": {"design_settings": {
-            "defaults": {"board_outline_line_width": 0.1, "copper_line_width": 0.2},
+            "defaults": {
+                "board_outline_line_width": 0.1, "copper_line_width": 0.2,
+                "solder_mask_clearance": 0.0, "solder_mask_min_width": 0.05,
+            },
             "rules": {
                 "min_clearance": 0.127, "min_track_width": 0.09, "min_via_diameter": 0.4,
                 "min_via_annular_width": 0.1, "min_through_hole_diameter": 0.2,
@@ -205,6 +138,8 @@ def apply_rules(board, router_margin=False):
     ds.m_MinThroughDrill = mm(0.2)
     ds.m_HoleClearance = mm(0.2)
     ds.m_HoleToHoleMin = mm(0.25)
+    ds.m_SolderMaskExpansion = mm(0)
+    ds.m_SolderMaskMinWidth = mm(0.05)
     ns = ds.m_NetSettings
     classes = {}
     for name, (width, clearance) in D.NETCLASSES.items():
@@ -272,10 +207,6 @@ def place(out_dir):
 
     add_outline(board)
     add_antenna_keepout(board)
-    route_epd_busy(board)
-    route_xtal_n(board)
-    route_xtal_p_chip(board)
-    route_xtal_p(board)
     # Only the In1 GND plane goes to the router (GND pads get vias to it); the
     # other pours are added after routing so they cannot fragment into islands.
     add_zone(board, netinfo["GND"], pcbnew.In1_Cu)

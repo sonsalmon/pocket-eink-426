@@ -106,7 +106,7 @@ part("U2", "Package_SON:WSON-8-1EP_6x5mm_P1.27mm_EP3.4x4.3mm", "W25Q128JVPIQ", "
      desc="16 MB QSPI NOR, used in DIO mode like the X4")
 part("Y1", "Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm", "40MHz", "C5380316", 53.0, 11.75, 0, {
     "1": ("X1", "XTAL_P"), "2": ("GND", "GND"), "3": ("X2", "XTAL_N"), "4": ("GND", "GND")})
-part("R1", R0402, "0R", "C17168", 50.0, 12.6, 180, two("XTAL_P", "XTAL_P_CHIP"),
+part("R1", R0402, "0R", "C17168", 49.9, 12.6, 90, two("XTAL_P", "XTAL_P_CHIP"),
      desc="XTAL_P series, Espressif tuning position")
 part("C1", C0402, "12pF", "C1547", 52.0, 14.7, 90, two("XTAL_P", "GND"))
 part("C2", C0402, "12pF", "C1547", 56.2, 10.9, 0, two("XTAL_N", "GND"))
@@ -213,10 +213,10 @@ part("L1", f"{LIB_POCKET}:IND-SMD_L4.0-W4.0_FNR4012S", "47uH", "C167794", 21, 17
      two("+3V3", "EPD_SW"), desc="boost inductor, 1.2 mm tall")
 part("C32", C0603, "4.7uF", "C19666", 20.5, 20.5, 90, two("+3V3", "GND"),
      desc="boost input bulk, next to L1 pin 1")
-part("Q3", "Package_TO_SOT_SMD:SOT-323_SC-70", "Si1308EDL", "C469327", 25.8, 16, 0, {
+part("Q3", "Package_TO_SOT_SMD:SOT-323_SC-70", "Si1308EDL", "C469327", 25.2, 16, 0, {
     "1": ("G", "GDR"), "2": ("S", "RESE"), "3": ("D", "EPD_SW")})
-part("R17", R0603, "2.2R", "C22939", 25.8, 18.6, 0, two("RESE", "GND"), desc="current sense")
-part("R18", R0402, "1M", "C26083", 25.8, 20.4, 0, two("GDR", "GND"))
+part("R17", R0603, "2.2R", "C22939", 25.2, 18.6, 0, two("RESE", "GND"), desc="current sense")
+part("R18", R0402, "1M", "C26083", 25.2, 20.4, 0, two("GDR", "GND"))
 part("D2", "Diode_SMD:D_SOD-123", "MBR0530", "C77336", 30.5, 15.2, 0,
      {"1": ("K", "EPD_NEG"), "2": ("A", "PREVGL")})
 part("D3", "Diode_SMD:D_SOD-123", "MBR0530", "C77336", 30.5, 17.6, 0,
