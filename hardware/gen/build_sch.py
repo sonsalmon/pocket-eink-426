@@ -15,8 +15,8 @@ NAME = "pocket-eink"
 G = 2.54
 NS = uuid.UUID("7d3b2f64-3c1e-4c55-9a8e-2b8f5e0d9a11")
 ROOT = str(uuid.uuid5(NS, "root"))
-SECTION_BREAKS = {"U1": "MCU / flash / RF", "TP1": "Battery / protection", "U4": "Charger",
-                  "U5": "3V3 LDO", "J1": "microSD", "J2": "E-paper FPC + charge pump",
+SECTION_BREAKS = {"U1": "ESP32-C3 module", "TP1": "Protected battery", "U4": "Charger",
+                  "U5": "3V3 LDO", "J2": "E-paper FPC + charge pump",
                   "R19": "Buttons", "J3": "USB-C", "TP3": "Test pads"}
 
 
@@ -128,7 +128,7 @@ def build(out_dir):
     text = "\n".join([
         "(kicad_sch (version 20231120) (generator \"pocket_gen\") (generator_version \"1.0\")",
         f"(uuid {ROOT}) (paper \"A0\")",
-        "(title_block (title \"Pocket E-Ink 4.26 main board\") (rev \"A\") "
+        "(title_block (title \"Pocket E-Ink 4.26 main board\") (rev \"B\") "
         "(comment 1 \"Generated from hardware/gen/design.py - edit that file, not this one\"))",
         "(lib_symbols", *libs, ")", *body,
         "(sheet_instances (path \"/\" (page \"1\")))", ")"])
