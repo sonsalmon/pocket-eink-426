@@ -90,6 +90,7 @@ def add_track(board, net, layer, start, end, width=0.127):
     track.SetWidth(mm(width))
     track.SetLayer(layer)
     track.SetNet(net)
+    track.SetLocked(True)
     board.Add(track)
 
 
@@ -99,6 +100,7 @@ def add_via(board, net, position):
     via.SetWidth(mm(0.5))
     via.SetDrill(mm(0.3))
     via.SetNet(net)
+    via.SetLocked(True)
     board.Add(via)
 
 
@@ -240,6 +242,7 @@ def place(out_dir):
 
     add_outline(board)
     add_antenna_keepout(board)
+    route_epd_busy(board)
     # Only the In1 GND plane goes to the router (GND pads get vias to it); the
     # other pours are added after routing so they cannot fragment into islands.
     add_zone(board, netinfo["GND"], pcbnew.In1_Cu)
@@ -265,7 +268,6 @@ def import_ses(out_dir):
     apply_rules(board)
     if not pcbnew.ImportSpecctraSES(board, os.path.join(out_dir, f"{NAME}.ses")):
         raise SystemExit("Specctra SES import failed")
-    route_epd_busy(board)
     enforce_min_track_width(board)
     gnd = board.FindNet("GND")
     for layer in (pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu):
