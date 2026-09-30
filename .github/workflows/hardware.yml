@@ -46,7 +46,7 @@ jobs:
             -mp 200 \
             -mt 1 \
             -is sequential \
-            --router.layers.routable=true,false \
+            --router.layers.routable=true,true \
             --gui.enabled=false | tail -40
           test -s pocket-eink.ses
 
