@@ -83,6 +83,32 @@ def add_antenna_keepout(board):
     board.Add(z)
 
 
+def add_epd_busy_escape(board):
+    """Escape U1 pad 12 to a via; Freerouting completes the remaining net."""
+    footprint = board.FindFootprintByReference("U1")
+    pad = next(p for p in footprint.Pads() if p.GetNumber() == "12")
+    net = board.FindNet("EPD_BUSY")
+    start = pad.GetPosition()
+    via_pos = pcbnew.VECTOR2I(start.x - mm(0.7), start.y)
+
+    track = pcbnew.PCB_TRACK(board)
+    track.SetStart(start)
+    track.SetEnd(via_pos)
+    track.SetWidth(mm(0.127))
+    track.SetLayer(pcbnew.F_Cu)
+    track.SetNet(net)
+    track.SetLocked(True)
+    board.Add(track)
+
+    via = pcbnew.PCB_VIA(board)
+    via.SetPosition(via_pos)
+    via.SetWidth(mm(0.5))
+    via.SetDrill(mm(0.3))
+    via.SetNet(net)
+    via.SetLocked(True)
+    board.Add(via)
+
+
 def enforce_min_track_width(board):
     """Freerouting can neck short QFN escape segments below the DSN rule."""
     minimum = mm(0.09)
@@ -207,6 +233,7 @@ def place(out_dir):
 
     add_outline(board)
     add_antenna_keepout(board)
+    add_epd_busy_escape(board)
     # Only the In1 GND plane goes to the router (GND pads get vias to it); the
     # other pours are added after routing so they cannot fragment into islands.
     add_zone(board, netinfo["GND"], pcbnew.In1_Cu)
