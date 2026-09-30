@@ -68,6 +68,7 @@ jobs:
         if: ${{ inputs.reroute != true }}
         run: |
           base64 --decode hardware/routed/pocket-eink.kicad_pcb.xz.b64 | xz --decompress > hardware/out/pocket-eink.kicad_pcb
+          /usr/bin/python3 hardware/gen/build_pcb.py frozen hardware/out
           /usr/bin/python3 hardware/ci/check_frozen.py hardware/out/pocket-eink.kicad_pcb
 
       - name: DRC

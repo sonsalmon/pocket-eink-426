@@ -302,6 +302,16 @@ def import_ses(out_dir):
     print(f"imported routes: {tracks} track/via items")
 
 
+def prepare_frozen(out_dir):
+    """Attach current manufacturing rules to the committed routed board."""
+    pcb_path = os.path.join(out_dir, f"{NAME}.kicad_pcb")
+    board = pcbnew.LoadBoard(pcb_path)
+    apply_rules(board)
+    pcbnew.SaveBoard(pcb_path, board)
+    write_project(out_dir)
+    print(f"prepared frozen route -> {pcb_path}")
+
+
 if __name__ == "__main__":
     step, out = sys.argv[1], sys.argv[2]
-    {"place": place, "import": import_ses}[step](out)
+    {"place": place, "import": import_ses, "frozen": prepare_frozen}[step](out)
